@@ -444,7 +444,10 @@
       maxZoom: 17,
       attribution: '&copy; OpenStreetMap contributors &copy; OpenTopoMap'
     });
-    let baseLayer = 'light';
+    let baseLayer = '{{MAP_DEFAULT_LAYER}}';
+    if (baseLayer !== 'dark' && baseLayer !== 'topo' && baseLayer !== 'light') {
+      baseLayer = 'light';
+    }
     const storedLayer = localStorage.getItem('meshmapBaseLayer');
     if (storedLayer === 'dark' || storedLayer === 'topo' || storedLayer === 'light') {
       baseLayer = storedLayer;

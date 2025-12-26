@@ -72,6 +72,7 @@ Runtime tuning:
 - `ELEVATION_CACHE_TTL` (seconds)
 - `LOS_PEAKS_MAX` (max peaks shown on LOS profile)
 - `MAP_START_LAT` / `MAP_START_LON` / `MAP_START_ZOOM` (default map view)
+- `MAP_DEFAULT_LAYER` (`light`, `dark`, or `topo`; localStorage overrides)
 
 ## Common Commands
 - Rebuild/restart: `docker compose up -d --build`

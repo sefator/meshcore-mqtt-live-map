@@ -31,6 +31,7 @@ This project renders live MeshCore traffic on a Leaflet + OpenStreetMap map. A F
 - Legend is collapsible and persisted to localStorage.
 - HUD is capped to `90vh` and scrolls to avoid running off-screen.
 - Map start position is configurable with `MAP_START_LAT`, `MAP_START_LON`, `MAP_START_ZOOM`.
+- Default base layer can be set with `MAP_DEFAULT_LAYER` (localStorage overrides).
 - Node search (name or key) and a labels toggle (persisted to localStorage).
 - Hide Nodes toggle hides markers and trails; routes remain visible.
 - Propagation overlay keeps heat/routes/trails/markers above it after render.

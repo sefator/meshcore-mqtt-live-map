@@ -83,6 +83,7 @@ try:
   MAP_START_ZOOM = float(os.getenv("MAP_START_ZOOM", "10"))
 except ValueError:
   MAP_START_ZOOM = 10
+MAP_DEFAULT_LAYER = os.getenv("MAP_DEFAULT_LAYER", "light").strip().lower()
 
 LOS_ELEVATION_URL = os.getenv("LOS_ELEVATION_URL", "https://api.opentopodata.org/v1/srtm90m")
 LOS_SAMPLE_MIN = int(os.getenv("LOS_SAMPLE_MIN", "10"))
@@ -1851,6 +1852,7 @@ def root():
     "MAP_START_LAT": MAP_START_LAT,
     "MAP_START_LON": MAP_START_LON,
     "MAP_START_ZOOM": MAP_START_ZOOM,
+    "MAP_DEFAULT_LAYER": MAP_DEFAULT_LAYER,
     "LOS_ELEVATION_URL": LOS_ELEVATION_URL,
     "LOS_SAMPLE_MIN": LOS_SAMPLE_MIN,
     "LOS_SAMPLE_MAX": LOS_SAMPLE_MAX,

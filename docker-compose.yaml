@@ -34,6 +34,7 @@ services:
       MAP_START_LAT: "${MAP_START_LAT:-42.3601}"
       MAP_START_LON: "${MAP_START_LON:--71.1500}"
       MAP_START_ZOOM: "${MAP_START_ZOOM:-10}"
+      MAP_DEFAULT_LAYER: "${MAP_DEFAULT_LAYER:-light}"
     restart: unless-stopped
     volumes:
       - ./data:/data
