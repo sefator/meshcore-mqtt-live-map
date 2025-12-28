@@ -42,7 +42,26 @@ docker compose up -d --build
 5) Open: `http://localhost:8080/` (or your `WEB_PORT`)
 
 ## Configuration (.env)
-Required MQTT settings:
+Debugging:
+- `DEBUG_PAYLOAD` (verbose decode logs)
+- `DEBUG_PAYLOAD_MAX` / `PAYLOAD_PREVIEW_MAX` (log truncation limits)
+
+Storage + server:
+- `STATE_DIR` (persisted state path)
+- `STATE_SAVE_INTERVAL` (seconds between state saves)
+- `WEB_PORT` (host port for the web UI)
+- `PROD_MODE` (true to require a token for API + WS)
+- `PROD_TOKEN` (required token; send via `?token=` or `Authorization: Bearer`)
+
+Site metadata (page title + embeds):
+- `SITE_TITLE`
+- `SITE_DESCRIPTION`
+- `SITE_OG_IMAGE` (optional; leave blank to omit embed image)
+- `SITE_URL` (public URL)
+- `SITE_ICON`
+- `SITE_FEED_NOTE`
+
+MQTT:
 - `MQTT_HOST`
 - `MQTT_PORT`
 - `MQTT_USERNAME`
@@ -52,37 +71,34 @@ Required MQTT settings:
 - `MQTT_TLS` (`true`)
 - `MQTT_TOPIC` (e.g. `meshcore/#`)
 
-Site metadata (used in page title + embeds):
-- `SITE_TITLE`
-- `SITE_DESCRIPTION`
-- `SITE_OG_IMAGE` (optional; leave blank to omit embed image)
-- `SITE_URL` (public URL)
-- `SITE_ICON`
-- `SITE_FEED_NOTE`
-
-Runtime tuning:
-- `WEB_PORT` (host port for the web UI)
+Device + route tuning:
 - `DEVICE_TTL_SECONDS` (node expiry)
 - `TRAIL_LEN` (points per device trail)
 - `ROUTE_TTL_SECONDS`
 - `ROUTE_PAYLOAD_TYPES` (packet types used for live routes)
-- `HEAT_TTL_SECONDS`
 - `MESSAGE_ORIGIN_TTL_SECONDS`
+
+History overlay:
 - `ROUTE_HISTORY_ENABLED`
 - `ROUTE_HISTORY_HOURS`
 - `ROUTE_HISTORY_MAX_SEGMENTS`
 - `ROUTE_HISTORY_COMPACT_INTERVAL`
 - `ROUTE_HISTORY_FILE`
 - `ROUTE_HISTORY_PAYLOAD_TYPES`
+
+Heat + online status:
+- `HEAT_TTL_SECONDS`
 - `MQTT_ONLINE_SECONDS` (online window for status ring)
 - `MQTT_ONLINE_TOPIC_SUFFIXES` (comma-separated topics that count as “online”)
-- `DEBUG_PAYLOAD` (verbose decoding logs)
+- `MQTT_SEEN_BROADCAST_MIN_SECONDS`
+
+Map + LOS:
+- `MAP_START_LAT` / `MAP_START_LON` / `MAP_START_ZOOM` (default map view)
+- `MAP_DEFAULT_LAYER` (`light`, `dark`, or `topo`; localStorage overrides)
 - `LOS_ELEVATION_URL` (elevation API for LOS tool)
 - `LOS_SAMPLE_MIN` / `LOS_SAMPLE_MAX` / `LOS_SAMPLE_STEP_METERS`
 - `ELEVATION_CACHE_TTL` (seconds)
 - `LOS_PEAKS_MAX` (max peaks shown on LOS profile)
-- `MAP_START_LAT` / `MAP_START_LON` / `MAP_START_ZOOM` (default map view)
-- `MAP_DEFAULT_LAYER` (`light`, `dark`, or `topo`; localStorage overrides)
 
 ## Common Commands
 - Rebuild/restart: `docker compose up -d --build`
