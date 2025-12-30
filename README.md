@@ -12,7 +12,7 @@ Live example: https://live.bostonme.sh/
 - Animated route/trace lines and message fanout
 - Heat map for the last 10 minutes of message activity (includes adverts)
 - Persistent device state and trails
-- 24-hour route history overlay (toggle) with volume-based coloring
+- 24-hour route history overlay (toggle) with volume-based coloring and click-to-view packet details
 - UI controls: legend toggle, dark map, topo map, labels toggle, hide nodes, heat toggle
 - Node search by name or public key
 - LOS tool with elevation profile + peak markers and hover sync
