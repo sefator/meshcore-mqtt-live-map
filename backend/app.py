@@ -52,7 +52,7 @@ ROUTE_HISTORY_HOURS = float(os.getenv("ROUTE_HISTORY_HOURS", "24"))
 ROUTE_HISTORY_MAX_SEGMENTS = int(os.getenv("ROUTE_HISTORY_MAX_SEGMENTS", "40000"))
 ROUTE_HISTORY_FILE = os.getenv("ROUTE_HISTORY_FILE", os.path.join(STATE_DIR, "route_history.jsonl"))
 ROUTE_HISTORY_PAYLOAD_TYPES = os.getenv("ROUTE_HISTORY_PAYLOAD_TYPES", ROUTE_PAYLOAD_TYPES)
-ROUTE_HISTORY_ALLOWED_MODES = os.getenv("ROUTE_HISTORY_ALLOWED_MODES", "path,direct,fanout")
+ROUTE_HISTORY_ALLOWED_MODES = os.getenv("ROUTE_HISTORY_ALLOWED_MODES", "path")
 ROUTE_HISTORY_COMPACT_INTERVAL = float(os.getenv("ROUTE_HISTORY_COMPACT_INTERVAL", "120"))
 HISTORY_EDGE_SAMPLE_LIMIT = 3
 MESSAGE_ORIGIN_TTL_SECONDS = int(os.getenv("MESSAGE_ORIGIN_TTL_SECONDS", "300"))
@@ -168,6 +168,7 @@ route_history_compact = False
 route_history_last_compact = 0.0
 node_hash_to_device: Dict[str, str] = {}
 node_hash_collisions: Set[str] = set()
+node_hash_candidates: Dict[str, List[str]] = {}
 elevation_cache: Dict[str, Tuple[float, float]] = {}
 device_names: Dict[str, str] = {}
 message_origins: Dict[str, Dict[str, Any]] = {}
@@ -400,28 +401,51 @@ def _node_hash_from_device_id(device_id: str) -> Optional[str]:
 
 
 def _rebuild_node_hash_map() -> None:
-  global node_hash_to_device, node_hash_collisions
-  mapping: Dict[str, Optional[str]] = {}
+  global node_hash_to_device, node_hash_collisions, node_hash_candidates
+  candidates: Dict[str, List[str]] = {}
   collisions: Set[str] = set()
   for device_id in devices.keys():
     node_hash = _node_hash_from_device_id(device_id)
     if not node_hash:
       continue
-    existing = mapping.get(node_hash)
-    if existing and existing != device_id:
-      mapping[node_hash] = None
-      collisions.add(node_hash)
-    elif existing is None:
-      collisions.add(node_hash)
+    candidates.setdefault(node_hash, []).append(device_id)
+  mapping: Dict[str, str] = {}
+  for node_hash, ids in candidates.items():
+    if len(ids) == 1:
+      mapping[node_hash] = ids[0]
     else:
-      mapping[node_hash] = device_id
-  for node_hash in collisions:
-    mapping[node_hash] = None
-  node_hash_to_device = {k: v for k, v in mapping.items() if v}
+      collisions.add(node_hash)
+  node_hash_candidates = candidates
   node_hash_collisions = collisions
+  node_hash_to_device = mapping
 
 
-def _route_points_from_hashes(path_hashes: List[Any], origin_id: Optional[str], receiver_id: Optional[str]) -> Tuple[Optional[List[List[float]]], List[str]]:
+def _choose_device_for_hash(node_hash: str, ts: float) -> Optional[str]:
+  candidates = node_hash_candidates.get(node_hash)
+  if not candidates:
+    return None
+  best_id = None
+  best_delta = None
+  for device_id in candidates:
+    state = devices.get(device_id)
+    if not state:
+      continue
+    if _coords_are_zero(state.lat, state.lon):
+      continue
+    last_seen = seen_devices.get(device_id) or state.ts or 0.0
+    try:
+      delta = abs(float(last_seen) - float(ts))
+    except (TypeError, ValueError):
+      delta = None
+    if delta is None:
+      continue
+    if best_delta is None or delta < best_delta:
+      best_delta = delta
+      best_id = device_id
+  return best_id
+
+
+def _route_points_from_hashes(path_hashes: List[Any], origin_id: Optional[str], receiver_id: Optional[str], ts: float) -> Tuple[Optional[List[List[float]]], List[str]]:
   normalized: List[str] = []
   for raw in path_hashes:
     key = _normalize_node_hash(raw)
@@ -443,6 +467,8 @@ def _route_points_from_hashes(path_hashes: List[Any], origin_id: Optional[str], 
 
   for key in normalized:
     device_id = node_hash_to_device.get(key)
+    if not device_id and key in node_hash_collisions:
+      device_id = _choose_device_for_hash(key, ts)
     if not device_id:
       continue
     state = devices.get(device_id)
@@ -2176,7 +2202,12 @@ async def broadcaster():
 
       if not points:
         path_hashes = event.get("path_hashes") or []
-        points, used_hashes = _route_points_from_hashes(list(path_hashes), event.get("origin_id"), event.get("receiver_id"))
+        points, used_hashes = _route_points_from_hashes(
+          list(path_hashes),
+          event.get("origin_id"),
+          event.get("receiver_id"),
+          event.get("ts") or time.time(),
+        )
 
       if not points and route_mode == "fanout":
         points = _route_points_from_device_ids(event.get("origin_id"), event.get("receiver_id"))

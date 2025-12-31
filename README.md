@@ -132,6 +132,7 @@ Use it:
 - LOS runs server-side via `/los` (no client-side elevation fetch).
 - Dark map also darkens node popups for readability.
 - Route styling uses payload type: 2/5 = Message (blue), 8/9 = Trace (orange), 4 = Advert (green).
+- If hop hashes collide, the backend chooses the device closest in time to the packet timestamp (heuristic).
 
 ## API
 The backend exposes a nodes API for external tools (e.g. MeshBuddy):
