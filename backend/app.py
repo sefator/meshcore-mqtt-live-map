@@ -470,8 +470,6 @@ def _route_points_from_hashes(path_hashes: List[Any], origin_id: Optional[str], 
 
   for key in normalized:
     device_id = node_hash_to_device.get(key)
-    if not device_id and key in node_hash_collisions:
-      device_id = _choose_device_for_hash(key, ts)
     if not device_id:
       continue
     state = devices.get(device_id)
@@ -1037,6 +1035,9 @@ def _load_state() -> None:
     else:
       trails_dirty = True
   trails = cleaned_trails
+  if TRAIL_LEN <= 0 and trails:
+    trails = {}
+    trails_dirty = True
   if dropped_ids:
     for device_id in dropped_ids:
       trails.pop(device_id, None)
@@ -2303,11 +2304,13 @@ async def broadcaster():
     if state.role:
       device_roles[device_id] = state.role
 
-    if not _coords_are_zero(state.lat, state.lon):
+    if TRAIL_LEN > 0 and not _coords_are_zero(state.lat, state.lon):
       trails.setdefault(device_id, [])
       trails[device_id].append([state.lat, state.lon, state.ts])
       if len(trails[device_id]) > TRAIL_LEN:
         trails[device_id] = trails[device_id][-TRAIL_LEN:]
+    elif device_id in trails:
+      trails.pop(device_id, None)
 
     payload = {"type": "update", "device": _device_payload(device_id, state), "trail": trails.get(device_id, [])}
 
@@ -2433,12 +2436,17 @@ def root():
   content = content.replace("{{OG_IMAGE_TAG}}", og_image_tag)
   content = content.replace("{{TWITTER_IMAGE_TAG}}", twitter_image_tag)
 
+  trail_info_suffix = ""
+  if TRAIL_LEN > 0:
+    trail_info_suffix = f" Trails show last ~{TRAIL_LEN} points."
+
   replacements = {
     "SITE_TITLE": SITE_TITLE,
     "SITE_DESCRIPTION": SITE_DESCRIPTION,
     "SITE_URL": SITE_URL,
     "SITE_ICON": SITE_ICON,
     "SITE_FEED_NOTE": SITE_FEED_NOTE,
+    "TRAIL_INFO_SUFFIX": trail_info_suffix,
     "PROD_MODE": str(PROD_MODE).lower(),
     "PROD_TOKEN": PROD_TOKEN,
     "MAP_START_LAT": MAP_START_LAT,

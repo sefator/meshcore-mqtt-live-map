@@ -314,7 +314,7 @@
       </a>
     </div>
     <div class="small">MeshCore node map.</div>
-    <div class="small">Markers update in real time. Trails show last ~50 points.</div>
+    <div class="small">Markers update in real time.{{TRAIL_INFO_SUFFIX}}</div>
     <div class="small">{{SITE_FEED_NOTE}}</div>
     <div class="small" id="stats"></div>
     <div class="small" id="los-status"></div>
@@ -493,6 +493,7 @@
     const routeLines = new Map(); // route_id -> { line, timeout }
     const deviceMeta = new Map(); // device_id -> { lat, lon, name }
     const historyLines = new Map(); // edge_id -> { line, count }
+    const historyCache = new Map(); // edge_id -> raw edge data
     const historyLayer = L.layerGroup();
     const routeLayer = L.layerGroup().addTo(map);
     const losElevationUrl = '{{LOS_ELEVATION_URL}}';
@@ -652,6 +653,7 @@
         }
         if (historyVisible && !map.hasLayer(historyLayer)) {
           historyLayer.addTo(map);
+          renderHistoryFromCache();
         }
         if (heatVisible && !map.hasLayer(heatLayer)) {
           heatLayer.addTo(map);
@@ -666,6 +668,7 @@
         }
         if (map.hasLayer(historyLayer)) {
           map.removeLayer(historyLayer);
+          clearHistoryLayer();
         }
         if (map.hasLayer(heatLayer)) {
           map.removeLayer(heatLayer);
@@ -678,6 +681,7 @@
         }
         if (map.hasLayer(historyLayer)) {
           map.removeLayer(historyLayer);
+          clearHistoryLayer();
         }
         if (map.hasLayer(heatLayer)) {
           map.removeLayer(heatLayer);
@@ -696,8 +700,10 @@
         if (!map.hasLayer(historyLayer)) {
           historyLayer.addTo(map);
         }
+        renderHistoryFromCache();
       } else if (map.hasLayer(historyLayer)) {
         map.removeLayer(historyLayer);
+        clearHistoryLayer();
       }
     }
 
@@ -2445,7 +2451,7 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
             pl.setStyle({ color: '#38bdf8', weight: 3, opacity: 0.85 });
           }
         }
-      } else if (polylines.has(id) && role === 'companion') {
+      } else if (polylines.has(id)) {
         trailLayer.removeLayer(polylines.get(id));
         polylines.delete(id);
       }
@@ -2534,12 +2540,32 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
       setStats();
     }
 
+    function clearRoutes() {
+      routeLines.forEach(entry => {
+        if (entry.timeout) clearTimeout(entry.timeout);
+        routeLayer.removeLayer(entry.line);
+      });
+      routeLines.clear();
+      setStats();
+    }
+
+    function clearHistoryLayer() {
+      historyLines.forEach(entry => {
+        if (!entry || !entry.line) return;
+        historyLayer.removeLayer(entry.line);
+      });
+      historyLines.clear();
+      refreshHistoryStyles();
+      setStats();
+    }
+
     function removeHistoryEdges(ids) {
       ids.forEach(id => {
         const entry = historyLines.get(id);
         if (!entry) return;
         historyLayer.removeLayer(entry.line);
         historyLines.delete(id);
+        historyCache.delete(id);
       });
       refreshHistoryStyles();
       setStats();
@@ -2592,9 +2618,19 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
       });
     }
 
-    function upsertHistoryEdge(edge) {
+    function historyEdgeId(edge) {
+      if (!edge) return null;
+      if (edge.id) return edge.id;
+      if (Array.isArray(edge.a) && Array.isArray(edge.b)) {
+        return `${edge.a.join(',')}-${edge.b.join(',')}`;
+      }
+      return null;
+    }
+
+    function renderHistoryEdge(edge) {
       if (!edge || !Array.isArray(edge.a) || !Array.isArray(edge.b)) return;
-      const id = edge.id || `${edge.a.join(',')}-${edge.b.join(',')}`;
+      const id = historyEdgeId(edge);
+      if (!id) return;
       const points = [
         [edge.a[0], edge.a[1]],
         [edge.b[0], edge.b[1]]
@@ -2620,6 +2656,23 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
       entry.recent = Array.isArray(edge.recent) ? edge.recent : [];
       entry.lastTs = edge.last_ts || entry.lastTs;
       refreshHistoryStyles();
+    }
+
+    function renderHistoryFromCache() {
+      historyCache.forEach(edge => renderHistoryEdge(edge));
+      setStats();
+    }
+
+    function upsertHistoryEdge(edge) {
+      const id = historyEdgeId(edge);
+      if (!id) return;
+      const edgeData = { ...edge, id };
+      historyCache.set(id, edgeData);
+      if (!historyVisible || !nodesVisible) {
+        setStats();
+        return;
+      }
+      renderHistoryEdge(edgeData);
     }
 
     function updateHistoryWindowLabel(seconds) {
@@ -2740,6 +2793,7 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
           seedHeat(snap.heat);
         }
         if (Array.isArray(snap.routes)) {
+          clearRoutes();
           snap.routes.forEach(r => upsertRoute(r, true));
         }
         if (Array.isArray(snap.history_edges)) {
@@ -2775,22 +2829,23 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
             const trail = msg.trails ? msg.trails[id] : null;
             upsertDevice(d, trail);
           }
+          clearRoutes();
           if (Array.isArray(msg.heat)) {
             seedHeat(msg.heat);
           }
-        if (Array.isArray(msg.routes)) {
-          msg.routes.forEach(r => upsertRoute(r, true));
+          if (Array.isArray(msg.routes)) {
+            msg.routes.forEach(r => upsertRoute(r, true));
+          }
+          if (Array.isArray(msg.history_edges)) {
+            msg.history_edges.forEach(edge => upsertHistoryEdge(edge));
+          }
+          if (msg.history_window_seconds != null) {
+            historyWindowSeconds = Number(msg.history_window_seconds);
+            updateHistoryWindowLabel(historyWindowSeconds);
+          }
+          setStats();
+          return;
         }
-        if (Array.isArray(msg.history_edges)) {
-          msg.history_edges.forEach(edge => upsertHistoryEdge(edge));
-        }
-        if (msg.history_window_seconds != null) {
-          historyWindowSeconds = Number(msg.history_window_seconds);
-          updateHistoryWindowLabel(historyWindowSeconds);
-        }
-        setStats();
-        return;
-      }
 
         if (msg.type === "update") {
           upsertDevice(msg.device, msg.trail);

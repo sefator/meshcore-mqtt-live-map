@@ -11,7 +11,7 @@ Live example: https://live.bostonme.sh/
 - MQTT online indicator (green outline + popup status)
 - Animated route/trace lines and message fanout
 - Heat map for the last 10 minutes of message activity (includes adverts)
-- Persistent device state and trails
+- Persistent device state and optional trails (disable with `TRAIL_LEN=0`)
 - 24-hour route history overlay (toggle) with volume-based coloring and click-to-view packet details
 - UI controls: legend toggle, dark map, topo map, labels toggle, hide nodes, heat toggle
 - Node search by name or public key
@@ -73,8 +73,9 @@ MQTT:
 
 Device + route tuning:
 - `DEVICE_TTL_SECONDS` (node expiry)
-- `TRAIL_LEN` (points per device trail)
+- `TRAIL_LEN` (points per device trail; `0` disables trails)
 - `ROUTE_TTL_SECONDS`
+- `ROUTE_PATH_MAX_LEN` (skip oversized path-hash lists)
 - `ROUTE_PAYLOAD_TYPES` (packet types used for live routes)
 - `MESSAGE_ORIGIN_TTL_SECONDS`
 
