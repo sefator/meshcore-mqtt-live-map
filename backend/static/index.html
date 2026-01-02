@@ -80,12 +80,16 @@
     }
     .legend-los-clear { border-color: #22c55e; border-top-style: solid; }
     .legend-los-blocked { border-color: #ef4444; border-top-style: dashed; }
+    .legend-los-group { display: none; }
+    .legend-los-group.active { display: block; }
     .legend-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid; display: inline-block; }
     .legend-repeater { border-color: #1d4ed8; background: #2b8cff; }
     .legend-companion { border-color: #6b21a8; background: #a855f7; }
     .legend-room { border-color: #b45309; background: #f59e0b; }
     .legend-unknown { border-color: #4b5563; background: #d1d5db; }
     .legend-online { border-color: #22c55e; background: rgba(34, 197, 94, 0.15); }
+    .legend-los-peak { border-color: #f59e0b; background: #fbbf24; }
+    .legend-los-relay { border-color: #f8fafc; background: linear-gradient(135deg, #22c55e 0%, #f59e0b 100%); }
     .legend-heat { width: 30px; height: 10px; border-radius: 6px; background: linear-gradient(90deg, #fbbf24, #f97316, #ef4444, #b91c1c); border: 1px solid rgba(255,255,255,.25); display: inline-block; }
     .legend-toggle {
       margin-top: 6px;
@@ -162,19 +166,24 @@
       white-space: nowrap;
     }
     .prop-panel {
-      margin-top: 6px;
-      padding: 8px;
-      border-radius: 10px;
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.18);
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 340px;
+      max-height: 70vh;
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(15,23,42,.78);
+      border: 1px solid rgba(255,255,255,.2);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      color: #fff;
       display: none;
       gap: 6px;
-      max-height: 50vh;
       overflow-y: auto;
       overflow-x: hidden;
-      width: 100%;
       box-sizing: border-box;
       grid-template-columns: 1fr;
+      z-index: 880;
     }
     .prop-panel.active { display: grid; }
     .prop-field {
@@ -192,6 +201,7 @@
       border-radius: 6px;
       padding: 2px 6px;
       font-size: 12px;
+      font-family: inherit;
     }
     .prop-panel input[type="range"] {
       padding: 0;
@@ -203,6 +213,37 @@
     }
     .prop-panel select {
       width: 150px;
+    }
+    .los-panel {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 320px;
+      max-height: 70vh;
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(15,23,42,.78);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #fff;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      display: none;
+      z-index: 900;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    .los-panel.active { display: block; }
+    .los-panel .los-profile { margin-top: 6px; }
+    .los-panel .map-toggle { width: 100%; margin-top: 6px; }
+    @media (max-width: 900px) {
+      .los-panel,
+      .prop-panel {
+        top: auto;
+        right: 12px;
+        left: 12px;
+        bottom: 12px;
+        width: auto;
+        max-height: 45vh;
+      }
     }
     .prop-hint {
       position: relative;
@@ -317,113 +358,20 @@
     <div class="small">Markers update in real time.{{TRAIL_INFO_SUFFIX}}</div>
     <div class="small">{{SITE_FEED_NOTE}}</div>
     <div class="small" id="stats"></div>
-    <div class="small" id="los-status"></div>
     <div class="node-search">
       <input class="node-search-input" id="node-search" type="text" placeholder="Search nodes by name or key..." autocomplete="off" />
       <div class="node-search-results" id="node-search-results" hidden></div>
     </div>
-    <div class="los-profile" id="los-profile" hidden>
-      <div class="small los-profile-title">Elevation profile</div>
-      <svg id="los-profile-svg" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
-      <div class="los-profile-tooltip" id="los-profile-tooltip" hidden></div>
-    </div>
     <button class="legend-toggle" id="legend-toggle" type="button">Hide legend</button>
     <button class="map-toggle" id="map-toggle" type="button">Dark map</button>
     <button class="map-toggle" id="topo-toggle" type="button">Topo map</button>
+    <button class="map-toggle" id="units-toggle" type="button">Units: km</button>
     <button class="map-toggle" id="los-toggle" type="button">LOS tool</button>
     <button class="map-toggle" id="labels-toggle" type="button">Labels Off</button>
     <button class="map-toggle" id="nodes-toggle" type="button">Hide nodes</button>
     <button class="map-toggle" id="history-toggle" type="button">Hide history</button>
     <button class="map-toggle" id="heat-toggle" type="button">Hide heat</button>
     <button class="map-toggle" id="prop-toggle" type="button">Propagation</button>
-    <div class="prop-panel" id="prop-panel">
-      <div class="small"><strong>Propagation estimate</strong></div>
-      <div class="small">LoRa 910.525 MHz • BW 62.5 kHz • SF7 • CR8</div>
-      <div class="small">Assumes 3 dBi TX antenna, 6 dB noise figure, 10 dB fade margin.</div>
-      <div class="small">Defaults assume 5 m AGL; MSL overrides use terrain data.</div>
-      <label class="prop-field">
-        <span>Tx power (dBm)<span class="prop-hint" title="transmit power used for link budget" data-tooltip="transmit power used for link budget">?</span></span>
-        <input id="prop-txpower" type="number" min="2" max="30" step="1" value="22" />
-      </label>
-      <label class="prop-field">
-        <span>Opacity<span class="prop-hint" title="overlay transparency" data-tooltip="overlay transparency">?</span></span>
-        <input id="prop-opacity" type="range" min="0.05" max="0.6" step="0.05" value="0.2" />
-      </label>
-      <label class="prop-field">
-        <span>Model<span class="prop-hint" title="path-loss environment profile (best-case matches the Meshcore app)" data-tooltip="path-loss environment profile (best-case matches the Meshcore app)">?</span></span>
-        <select id="prop-model">
-          <option value="free" selected>Best-case (free-space)</option>
-          <option value="suburban">Suburban</option>
-          <option value="urban">Urban</option>
-          <option value="indoor">Indoor/obstructed</option>
-        </select>
-      </label>
-      <label class="prop-field">
-        <span>Terrain adjust<span class="prop-hint" title="apply terrain diffraction using elevation tiles" data-tooltip="apply terrain diffraction using elevation tiles">?</span></span>
-        <input id="prop-terrain" type="checkbox" checked />
-      </label>
-      <label class="prop-field">
-        <span>Tx AGL (m)<span class="prop-hint" title="transmitter height above ground" data-tooltip="transmitter height above ground">?</span></span>
-        <input id="prop-tx-agl" type="number" min="0" max="50" step="0.5" value="5" />
-      </label>
-      <label class="prop-field">
-        <span>Tx MSL override (m)<span class="prop-hint" title="override transmitter altitude above sea level" data-tooltip="override transmitter altitude above sea level">?</span></span>
-        <input id="prop-tx-msl" type="number" min="-100" max="9000" step="1" placeholder="auto" />
-      </label>
-      <label class="prop-field">
-        <span>Rx AGL (m)<span class="prop-hint" title="receiver height above ground" data-tooltip="receiver height above ground">?</span></span>
-        <input id="prop-rx-agl" type="number" min="0" max="50" step="0.5" value="5" />
-      </label>
-      <label class="prop-field">
-        <span>Rx MSL override (m)<span class="prop-hint" title="override receiver altitude above sea level" data-tooltip="override receiver altitude above sea level">?</span></span>
-        <input id="prop-rx-msl" type="number" min="-100" max="9000" step="1" placeholder="auto" />
-      </label>
-      <label class="prop-field">
-        <span>Min Rx cutoff (dBm)<span class="prop-hint" title="enter your SNR value here" data-tooltip="enter your SNR value here">?</span></span>
-        <input id="prop-min-rx" type="number" min="-150" max="-60" step="1" value="-97" />
-      </label>
-      <label class="prop-field">
-        <span>Auto range (cutoff)<span class="prop-hint" title="derive range from min Rx cutoff" data-tooltip="derive range from min Rx cutoff">?</span></span>
-        <input id="prop-auto-range" type="checkbox" checked />
-      </label>
-      <label class="prop-field">
-        <span>Multi-origin<span class="prop-hint" title="allow multiple transmitters in one render" data-tooltip="allow multiple transmitters in one render">?</span></span>
-        <input id="prop-multi-origin" type="checkbox" checked />
-      </label>
-      <label class="prop-field">
-        <span>Fade by margin<span class="prop-hint" title="fade coverage by link margin strength" data-tooltip="fade coverage by link margin strength">?</span></span>
-        <input id="prop-fade-margin" type="checkbox" />
-      </label>
-      <label class="prop-field">
-        <span>WebGPU (experimental)<span class="prop-hint" title="GPU-accelerated render (terrain off)" data-tooltip="GPU-accelerated render (terrain off)">?</span></span>
-        <input id="prop-webgpu" type="checkbox" />
-      </label>
-      <button class="map-toggle" id="prop-clear-origins" type="button">Clear origins</button>
-      <label class="prop-field">
-        <span>Auto resolution<span class="prop-hint" title="scale grid to stay within target cells" data-tooltip="scale grid to stay within target cells">?</span></span>
-        <input id="prop-auto-res" type="checkbox" checked />
-      </label>
-      <label class="prop-field">
-        <span>Target cells<span class="prop-hint" title="upper bound for grid cell count" data-tooltip="upper bound for grid cell count">?</span></span>
-        <input id="prop-max-cells" type="number" min="20000" max="500000" step="10000" value="120000" />
-      </label>
-      <label class="prop-field">
-        <span>Grid step (m)<span class="prop-hint" title="spacing between coverage samples" data-tooltip="spacing between coverage samples">?</span></span>
-        <input id="prop-grid" type="number" min="30" max="300" step="10" value="90" />
-      </label>
-      <label class="prop-field">
-        <span>Sample step (m)<span class="prop-hint" title="terrain sampling interval along each ray" data-tooltip="terrain sampling interval along each ray">?</span></span>
-        <input id="prop-sample" type="number" min="30" max="300" step="10" value="90" />
-      </label>
-      <label class="prop-field">
-        <span>Range factor<span class="prop-hint" title="scale the base range estimate" data-tooltip="scale the base range estimate">?</span></span>
-        <input id="prop-range-factor" type="range" min="0.25" max="1" step="0.05" value="1" />
-      </label>
-      <button class="map-toggle" id="prop-render" type="button">Render prop</button>
-      <div class="small" id="prop-range"></div>
-      <div class="small" id="prop-cost"></div>
-      <div class="small" id="prop-status"></div>
-    </div>
     <div class="legend">
       <div class="legend-item"><span class="legend-line legend-trace"></span> Trace/path</div>
       <div class="legend-item"><span class="legend-line legend-message"></span> Message</div>
@@ -432,8 +380,12 @@
         <span class="legend-history-swatch"></span>
         <span id="history-window-label">History (24h • volume)</span>
       </div>
-      <div class="legend-item"><span class="legend-line legend-los-clear"></span> LOS clear</div>
-      <div class="legend-item"><span class="legend-line legend-los-blocked"></span> LOS blocked</div>
+      <div class="legend-los-group" id="legend-los-group">
+        <div class="legend-item"><span class="legend-line legend-los-clear"></span> LOS clear</div>
+        <div class="legend-item"><span class="legend-line legend-los-blocked"></span> LOS blocked</div>
+        <div class="legend-item"><span class="legend-dot legend-los-peak"></span> LOS peak</div>
+        <div class="legend-item"><span class="legend-dot legend-los-relay"></span> Relay suggested</div>
+      </div>
       <div class="legend-item"><span class="legend-heat"></span> Heat (last 10 min)</div>
       <div class="legend-item"><span class="legend-dot legend-online"></span><span id="mqtt-online-label">MQTT online (last 5 min)</span></div>
       <div class="legend-item"><span class="legend-dot legend-repeater"></span> Repeater</div>
@@ -441,6 +393,105 @@
       <div class="legend-item"><span class="legend-dot legend-room"></span> Room server</div>
       <div class="legend-item"><span class="legend-dot legend-unknown"></span> Unknown</div>
     </div>
+  </div>
+  <div class="los-panel" id="los-panel">
+    <div class="small"><strong>Line of Sight</strong></div>
+    <div class="small" id="los-status"></div>
+    <div class="small">Click the profile to copy coords. Use Clear to start a new path.</div>
+    <button class="map-toggle" id="los-clear" type="button">Clear LOS</button>
+    <div class="los-profile" id="los-profile" hidden>
+      <div class="small los-profile-title">Elevation profile</div>
+      <svg id="los-profile-svg" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
+      <div class="los-profile-tooltip" id="los-profile-tooltip" hidden></div>
+    </div>
+  </div>
+  <div class="prop-panel" id="prop-panel">
+    <div class="small"><strong>Propagation estimate</strong></div>
+    <div class="small">LoRa 910.525 MHz • BW 62.5 kHz • SF7 • CR8</div>
+    <div class="small">Assumes 3 dBi TX antenna, 6 dB noise figure, 10 dB fade margin.</div>
+    <div class="small">Defaults assume 5 m AGL; MSL overrides use terrain data.</div>
+    <label class="prop-field">
+      <span>Tx power (dBm)<span class="prop-hint" title="transmit power used for link budget" data-tooltip="transmit power used for link budget">?</span></span>
+      <input id="prop-txpower" type="number" min="2" max="30" step="1" value="22" />
+    </label>
+    <label class="prop-field">
+      <span>Opacity<span class="prop-hint" title="overlay transparency" data-tooltip="overlay transparency">?</span></span>
+      <input id="prop-opacity" type="range" min="0.05" max="0.6" step="0.05" value="0.2" />
+    </label>
+    <label class="prop-field">
+      <span>Model<span class="prop-hint" title="path-loss environment profile (best-case matches the Meshcore app)" data-tooltip="path-loss environment profile (best-case matches the Meshcore app)">?</span></span>
+      <select id="prop-model">
+        <option value="free" selected>Best-case (free-space)</option>
+        <option value="suburban">Suburban</option>
+        <option value="urban">Urban</option>
+        <option value="indoor">Indoor/obstructed</option>
+      </select>
+    </label>
+    <label class="prop-field">
+      <span>Terrain adjust<span class="prop-hint" title="apply terrain diffraction using elevation tiles" data-tooltip="apply terrain diffraction using elevation tiles">?</span></span>
+      <input id="prop-terrain" type="checkbox" checked />
+    </label>
+    <label class="prop-field">
+      <span>Tx AGL (m)<span class="prop-hint" title="transmitter height above ground" data-tooltip="transmitter height above ground">?</span></span>
+      <input id="prop-tx-agl" type="number" min="0" max="50" step="0.5" value="5" />
+    </label>
+    <label class="prop-field">
+      <span>Tx MSL override (m)<span class="prop-hint" title="override transmitter altitude above sea level" data-tooltip="override transmitter altitude above sea level">?</span></span>
+      <input id="prop-tx-msl" type="number" min="-100" max="9000" step="1" placeholder="auto" />
+    </label>
+    <label class="prop-field">
+      <span>Rx AGL (m)<span class="prop-hint" title="receiver height above ground" data-tooltip="receiver height above ground">?</span></span>
+      <input id="prop-rx-agl" type="number" min="0" max="50" step="0.5" value="5" />
+    </label>
+    <label class="prop-field">
+      <span>Rx MSL override (m)<span class="prop-hint" title="override receiver altitude above sea level" data-tooltip="override receiver altitude above sea level">?</span></span>
+      <input id="prop-rx-msl" type="number" min="-100" max="9000" step="1" placeholder="auto" />
+    </label>
+    <label class="prop-field">
+      <span>Min Rx cutoff (dBm)<span class="prop-hint" title="enter your SNR value here" data-tooltip="enter your SNR value here">?</span></span>
+      <input id="prop-min-rx" type="number" min="-150" max="-60" step="1" value="-97" />
+    </label>
+    <label class="prop-field">
+      <span>Auto range (cutoff)<span class="prop-hint" title="derive range from min Rx cutoff" data-tooltip="derive range from min Rx cutoff">?</span></span>
+      <input id="prop-auto-range" type="checkbox" checked />
+    </label>
+    <label class="prop-field">
+      <span>Multi-origin<span class="prop-hint" title="allow multiple transmitters in one render" data-tooltip="allow multiple transmitters in one render">?</span></span>
+      <input id="prop-multi-origin" type="checkbox" checked />
+    </label>
+    <label class="prop-field">
+      <span>Fade by margin<span class="prop-hint" title="fade coverage by link margin strength" data-tooltip="fade coverage by link margin strength">?</span></span>
+      <input id="prop-fade-margin" type="checkbox" />
+    </label>
+    <label class="prop-field">
+      <span>WebGPU (experimental)<span class="prop-hint" title="GPU-accelerated render (terrain off)" data-tooltip="GPU-accelerated render (terrain off)">?</span></span>
+      <input id="prop-webgpu" type="checkbox" />
+    </label>
+    <button class="map-toggle" id="prop-clear-origins" type="button">Clear origins</button>
+    <label class="prop-field">
+      <span>Auto resolution<span class="prop-hint" title="scale grid to stay within target cells" data-tooltip="scale grid to stay within target cells">?</span></span>
+      <input id="prop-auto-res" type="checkbox" checked />
+    </label>
+    <label class="prop-field">
+      <span>Target cells<span class="prop-hint" title="upper bound for grid cell count" data-tooltip="upper bound for grid cell count">?</span></span>
+      <input id="prop-max-cells" type="number" min="20000" max="500000" step="10000" value="120000" />
+    </label>
+    <label class="prop-field">
+      <span>Grid step (m)<span class="prop-hint" title="spacing between coverage samples" data-tooltip="spacing between coverage samples">?</span></span>
+      <input id="prop-grid" type="number" min="30" max="300" step="10" value="90" />
+    </label>
+    <label class="prop-field">
+      <span>Sample step (m)<span class="prop-hint" title="terrain sampling interval along each ray" data-tooltip="terrain sampling interval along each ray">?</span></span>
+      <input id="prop-sample" type="number" min="30" max="300" step="10" value="90" />
+    </label>
+    <label class="prop-field">
+      <span>Range factor<span class="prop-hint" title="scale the base range estimate" data-tooltip="scale the base range estimate">?</span></span>
+      <input id="prop-range-factor" type="range" min="0.25" max="1" step="0.05" value="1" />
+    </label>
+    <button class="map-toggle" id="prop-render" type="button">Render prop</button>
+    <div class="small" id="prop-range"></div>
+    <div class="small" id="prop-cost"></div>
+    <div class="small" id="prop-status"></div>
   </div>
   <div id="map"></div>
 
@@ -502,6 +553,7 @@
     const losSampleStepMeters = Number('{{LOS_SAMPLE_STEP_METERS}}') || 250;
     const losPeaksMax = Number('{{LOS_PEAKS_MAX}}') || 4;
     const mqttOnlineSeconds = Number('{{MQTT_ONLINE_SECONDS}}') || 300;
+    const defaultDistanceUnits = '{{DISTANCE_UNITS}}';
     const heatLayer = L.heatLayer([], {
       radius: 28,
       blur: 22,
@@ -517,9 +569,18 @@
     let losLine = null;
     let losSuggestion = null;
     let losPeakMarkers = [];
+    let losHoverMarker = null;
+    let losActivePeak = null;
+    let losLocked = false;
+    let lastLosDistance = null;
+    let lastLosStatusMeta = null;
     const losProfile = document.getElementById('los-profile');
     const losProfileSvg = document.getElementById('los-profile-svg');
     const losProfileTooltip = document.getElementById('los-profile-tooltip');
+    const losLegendGroup = document.getElementById('legend-los-group');
+    const losClearButton = document.getElementById('los-clear');
+    const losPanel = document.getElementById('los-panel');
+    const propPanel = document.getElementById('prop-panel');
     let losProfileData = [];
     let losProfileMeta = null;
     const deviceData = new Map();
@@ -530,6 +591,12 @@
     let showLabels = storedLabels === 'true';
     if (storedLabels === null) {
       localStorage.setItem('meshmapShowLabels', 'false');
+    }
+    const validUnits = new Set(['km', 'mi']);
+    let distanceUnits = (localStorage.getItem('meshmapDistanceUnits') || defaultDistanceUnits || 'km').toLowerCase();
+    if (!validUnits.has(distanceUnits)) {
+      distanceUnits = 'km';
+      localStorage.setItem('meshmapDistanceUnits', distanceUnits);
     }
     const historyLabel = document.getElementById('history-window-label');
     let historyWindowSeconds = null;
@@ -844,13 +911,35 @@
       }
       losProfileData = [];
       losProfileMeta = null;
+      layoutSidePanels();
     }
 
     function clearLosPeaks() {
-      losPeakMarkers.forEach(marker => {
-        losLayer.removeLayer(marker);
+      losPeakMarkers.forEach(item => {
+        const marker = item && item.marker ? item.marker : item;
+        if (marker) {
+          losLayer.removeLayer(marker);
+        }
       });
       losPeakMarkers = [];
+      losActivePeak = null;
+    }
+
+    function clearLosHoverMarker() {
+      if (losHoverMarker) {
+        losLayer.removeLayer(losHoverMarker);
+        losHoverMarker = null;
+      }
+      if (losActivePeak && losActivePeak.marker) {
+        losActivePeak.marker.setStyle({
+          radius: 4,
+          color: '#f59e0b',
+          fillColor: '#fbbf24',
+          weight: 2,
+          fillOpacity: 0.95
+        });
+        losActivePeak = null;
+      }
     }
     function setPropStatus(text) {
       const el = document.getElementById('prop-status');
@@ -872,14 +961,57 @@
         el.textContent = text || '';
       }
     }
+    function layoutSidePanels() {
+      if (!propPanel || !losPanel) return;
+      const isMobile = window.matchMedia('(max-width: 900px)').matches;
+      if (isMobile) {
+        propPanel.style.top = '';
+        losPanel.style.top = '';
+        if (losActive && losPanel.classList.contains('active') && propagationActive && propPanel.classList.contains('active')) {
+          const propHeight = propPanel.offsetHeight || 0;
+          propPanel.style.bottom = '12px';
+          losPanel.style.bottom = `${Math.max(12, propHeight + 24)}px`;
+        } else {
+          if (losActive && losPanel.classList.contains('active')) {
+            losPanel.style.bottom = '12px';
+          } else {
+            losPanel.style.bottom = '';
+          }
+          if (propagationActive && propPanel.classList.contains('active')) {
+            propPanel.style.bottom = '12px';
+          } else {
+            propPanel.style.bottom = '';
+          }
+        }
+        return;
+      }
+      losPanel.style.bottom = '';
+      propPanel.style.bottom = '';
+      if (!propagationActive || !propPanel.classList.contains('active')) {
+        propPanel.style.top = '';
+        return;
+      }
+      let top = 18;
+      if (losActive && losPanel.classList.contains('active')) {
+        const losRect = losPanel.getBoundingClientRect();
+        const panelHeight = propPanel.offsetHeight || 0;
+        const candidate = Math.round(losRect.bottom + 12);
+        const maxTop = Math.max(12, window.innerHeight - panelHeight - 12);
+        top = candidate <= maxTop ? candidate : maxTop;
+      }
+      propPanel.style.top = `${top}px`;
+    }
     function clearLos() {
       losPoints = [];
       losLine = null;
       losSuggestion = null;
+      losLocked = false;
+      lastLosStatusMeta = null;
       losLayer.clearLayers();
       setLosStatus('');
       clearLosProfile();
       clearLosPeaks();
+      clearLosHoverMarker();
     }
 
     function setLosActive(active) {
@@ -889,11 +1021,19 @@
         btn.classList.toggle('active', active);
         btn.textContent = active ? 'LOS: click 2 points' : 'LOS tool';
       }
+      if (losLegendGroup) {
+        losLegendGroup.classList.toggle('active', active);
+      }
+      if (losPanel) {
+        losPanel.classList.toggle('active', active);
+      }
       if (!active) {
         clearLos();
       } else {
-        setLosStatus('LOS: select first point (Shift+click nodes too)');
+        losLocked = false;
+        setLosStatus('LOS: select first point (Shift+click or long-press nodes)');
       }
+      layoutSidePanels();
     }
 
     function renderLosProfile(profile, blocked) {
@@ -961,13 +1101,53 @@
         blocked
       };
       losProfile.hidden = false;
+      layoutSidePanels();
     }
 
-    function formatDistanceMeters(meters) {
+    function formatDistanceUnits(meters) {
       if (meters == null) return '';
       const value = Number(meters);
       if (Number.isNaN(value)) return '';
-      return value >= 1000 ? `${(value / 1000).toFixed(2)} km` : `${Math.round(value)} m`;
+      if (distanceUnits === 'mi') {
+        const miles = value / 1609.344;
+        if (miles < 0.5) {
+          const feet = value * 3.28084;
+          return `${Math.round(feet)} ft`;
+        }
+        return `${miles.toFixed(2)} mi`;
+      }
+      if (value >= 1000) return `${(value / 1000).toFixed(2)} km`;
+      return `${Math.round(value)} m`;
+    }
+
+    function formatDistanceMeters(meters) {
+      return formatDistanceUnits(meters);
+    }
+
+    function formatObstructionUnits(meters) {
+      if (meters == null) return '';
+      const value = Number(meters);
+      if (Number.isNaN(value)) return '';
+      if (distanceUnits === 'mi') {
+        const feet = value * 3.28084;
+        return `${feet.toFixed(1)} ft`;
+      }
+      return `${value.toFixed(1)} m`;
+    }
+
+    function buildLosStatus(meta) {
+      if (!meta) return '';
+      const distance = meta.distance_m != null ? formatDistanceUnits(meta.distance_m) : '';
+      const obstruction = meta.blocked
+        ? `Blocked (+${formatObstructionUnits(meta.obstruction_m)})`
+        : 'Clear';
+      let status = `LOS: ${distance} • ${obstruction}`;
+      if (meta.suggested) {
+        status += meta.suggested_clear
+          ? ' • Relay Suggested'
+          : ' • Relay May Help (Still Blocked)';
+      }
+      return status;
     }
 
     function formatElevationMeters(meters) {
@@ -1003,6 +1183,103 @@
       losProfileTooltip.style.top = `${ySvg}px`;
     }
 
+    function updateLosPeakHighlight(distanceMeters) {
+      if (!losPeakMarkers.length || distanceMeters == null) {
+        if (losActivePeak) {
+          losActivePeak.marker.setStyle({
+            radius: 4,
+            color: '#f59e0b',
+            fillColor: '#fbbf24',
+            weight: 2,
+            fillOpacity: 0.95
+          });
+          if (losActivePeak.marker.closeTooltip) {
+            losActivePeak.marker.closeTooltip();
+          }
+          losActivePeak = null;
+        }
+        return null;
+      }
+      const threshold = Math.max(150, losSampleStepMeters * 0.75);
+      let best = null;
+      losPeakMarkers.forEach(item => {
+        if (!item || item.distance == null) return;
+        const delta = Math.abs(item.distance - distanceMeters);
+        if (delta <= threshold && (!best || delta < best.delta)) {
+          best = { item, delta };
+        }
+      });
+      if (!best) {
+        if (losActivePeak) {
+          losActivePeak.marker.setStyle({
+            radius: 4,
+            color: '#f59e0b',
+            fillColor: '#fbbf24',
+            weight: 2,
+            fillOpacity: 0.95
+          });
+          if (losActivePeak.marker.closeTooltip) {
+            losActivePeak.marker.closeTooltip();
+          }
+          losActivePeak = null;
+        }
+        return null;
+      }
+      if (losActivePeak && losActivePeak !== best.item) {
+        losActivePeak.marker.setStyle({
+          radius: 4,
+          color: '#f59e0b',
+          fillColor: '#fbbf24',
+          weight: 2,
+          fillOpacity: 0.95
+        });
+        if (losActivePeak.marker.closeTooltip) {
+          losActivePeak.marker.closeTooltip();
+        }
+      }
+      if (!losActivePeak || losActivePeak !== best.item) {
+        best.item.marker.setStyle({
+          radius: 6,
+          color: '#f97316',
+          fillColor: '#fbbf24',
+          weight: 2,
+          fillOpacity: 1
+        });
+        best.item.marker.openTooltip();
+        losActivePeak = best.item;
+      }
+      return `Peak ${best.item.index}`;
+    }
+
+    function updateLosMapHover(distanceMeters) {
+      if (!losProfileMeta || !losPoints || losPoints.length < 2) return;
+      const total = losProfileMeta.totalDistance;
+      const clamped = Math.min(Math.max(distanceMeters, 0), total);
+      const t = total > 0 ? (clamped / total) : 0;
+      const start = losPoints[0];
+      const end = losPoints[1];
+      const lat = start.lat + (end.lat - start.lat) * t;
+      const lon = start.lng + (end.lng - start.lng) * t;
+      const label = updateLosPeakHighlight(clamped);
+      const tooltip = label
+        ? `${label} • ${formatDistanceMeters(clamped)}`
+        : `LOS point • ${formatDistanceMeters(clamped)}`;
+      if (!losHoverMarker) {
+        losHoverMarker = L.circleMarker([lat, lon], {
+          radius: 5,
+          color: '#e2e8f0',
+          fillColor: '#0f172a',
+          fillOpacity: 0.9,
+          weight: 2,
+          bubblingMouseEvents: false
+        }).addTo(losLayer);
+      } else {
+        losHoverMarker.setLatLng([lat, lon]);
+      }
+      losHoverMarker.bindTooltip(tooltip, { direction: 'top', opacity: 0.9, offset: [0, -8] });
+      losHoverMarker.openTooltip();
+    }
+
     function updateLosProfileHover(ev) {
       if (!losProfileMeta || !losProfileSvg || !losProfileTooltip) return;
       if (!losProfileData || losProfileData.length < 2) return;
@@ -1013,16 +1290,49 @@
       const point = losProfileData[idx];
       if (!point) return;
       updateLosProfileCursor(point[0], point[1], point[2]);
+      updateLosMapHover(point[0]);
+    }
+
+    function losProfileDistanceFromEvent(ev) {
+      if (!losProfileMeta || !losProfileSvg) return null;
+      const rect = losProfileSvg.getBoundingClientRect();
+      const x = Math.min(Math.max(ev.clientX - rect.left, losProfileMeta.pad), rect.width - losProfileMeta.pad);
+      const ratio = (x - losProfileMeta.pad) / Math.max(1, rect.width - losProfileMeta.pad * 2);
+      const total = losProfileMeta.totalDistance;
+      return Math.min(Math.max(ratio, 0), 1) * total;
+    }
+
+    function copyLosCoords(distanceMeters) {
+      if (!losPoints || losPoints.length < 2 || distanceMeters == null || !losProfileMeta) return;
+      const total = losProfileMeta.totalDistance || 0;
+      const t = total > 0 ? Math.min(Math.max(distanceMeters / total, 0), 1) : 0;
+      const start = losPoints[0];
+      const end = losPoints[1];
+      const lat = start.lat + (end.lat - start.lat) * t;
+      const lon = start.lng + (end.lng - start.lng) * t;
+      const coords = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(coords).then(() => {
+          setLosStatus(`LOS: coords copied ${coords}`);
+        }).catch(() => {
+          setLosStatus(`LOS: ${coords}`);
+        });
+      } else {
+        setLosStatus(`LOS: ${coords}`);
+      }
+      updateLosMapHover(distanceMeters);
     }
 
     function updateLosProfileAtDistance(distanceMeters) {
       if (!losProfileData || losProfileData.length < 2 || !losProfileMeta) return;
       const total = losProfileMeta.totalDistance;
       const clamped = Math.min(Math.max(distanceMeters, 0), total);
+      lastLosDistance = clamped;
       const idx = Math.min(losProfileData.length - 1, Math.max(0, Math.round((clamped / total) * (losProfileData.length - 1))));
       const point = losProfileData[idx];
       if (!point) return;
       updateLosProfileCursor(point[0], point[1], point[2]);
+      updateLosMapHover(point[0]);
     }
 
     function clearLosProfileHover() {
@@ -1031,6 +1341,7 @@
       if (cursor) cursor.setAttribute('opacity', '0');
       if (dot) dot.setAttribute('opacity', '0');
       if (losProfileTooltip) losProfileTooltip.hidden = true;
+      clearLosHoverMarker();
     }
 
     function updateLosProfileFromMap(latlng) {
@@ -1056,7 +1367,8 @@
         const lon = Number(peak.lon);
         if (Number.isNaN(lat) || Number.isNaN(lon)) return;
         const index = peak.index || (idx + 1);
-        const distance = formatDistanceMeters(peak.distance_m);
+        const distanceMeters = peak.distance_m != null ? Number(peak.distance_m) : null;
+        const distance = formatDistanceMeters(distanceMeters);
         const elev = peak.elevation_m != null ? `${peak.elevation_m} m` : '';
         const coord = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
         const tooltip = `Peak ${index}${distance ? ` • ${distance}` : ''}<br/>${coord}${elev ? `<br/>${elev}` : ''}`;
@@ -1085,7 +1397,13 @@
             setLosStatus(`LOS: Peak ${index} ${coords}`);
           }
         });
-        losPeakMarkers.push(marker);
+        losPeakMarkers.push({
+          marker,
+          index,
+          distance: Number.isNaN(distanceMeters) ? null : distanceMeters,
+          lat,
+          lon
+        });
       });
     }
 
@@ -1099,6 +1417,7 @@
       const res = await fetch(`/los?${params.toString()}`);
       const data = await res.json();
       if (!data.ok) {
+        lastLosStatusMeta = null;
         setLosStatus(`LOS: ${data.error || 'failed'}`);
         if (losLine) {
           losLine.setStyle({ color: '#9ca3af', weight: 4, opacity: 0.8, dashArray: '6 10' });
@@ -1108,17 +1427,14 @@
         return false;
       }
       const blocked = data.blocked;
-      let distance = '';
-      if (data.distance_m != null) {
-        const meters = Number(data.distance_m);
-        if (!Number.isNaN(meters)) {
-          distance = meters >= 1000
-            ? `${(meters / 1000).toFixed(2)} km`
-            : `${Math.round(meters)} m`;
-        }
-      }
-      const obstruction = blocked ? `Blocked (+${data.max_obstruction_m}m)` : 'Clear';
-      let statusText = `LOS: ${distance} • ${obstruction}`;
+      const meters = data.distance_m != null ? Number(data.distance_m) : null;
+      lastLosStatusMeta = {
+        distance_m: Number.isFinite(meters) ? meters : null,
+        blocked,
+        obstruction_m: data.max_obstruction_m,
+        suggested: false,
+        suggested_clear: false
+      };
       if (losSuggestion) {
         losLayer.removeLayer(losSuggestion);
         losSuggestion = null;
@@ -1136,9 +1452,10 @@
           weight: 2
         }).addTo(losLayer);
         losSuggestion.bindTooltip(`${label}<br/>${s.lat}, ${s.lon}`, { direction: 'top' });
-        statusText += s.clear ? ' • Relay Suggested' : ' • Relay May Help (Still Blocked)';
+        lastLosStatusMeta.suggested = true;
+        lastLosStatusMeta.suggested_clear = !!s.clear;
       }
-      setLosStatus(statusText);
+      setLosStatus(buildLosStatus(lastLosStatusMeta));
       renderLosProfile(data.profile, blocked);
       if (losLine) {
         losLine.setStyle({
@@ -1179,19 +1496,19 @@
     function setPropActive(active) {
       propagationActive = active;
       const btn = document.getElementById('prop-toggle');
-      const panel = document.getElementById('prop-panel');
       if (btn) {
         btn.classList.toggle('active', active);
         btn.textContent = active ? 'Propagation: select node(s)' : 'Propagation';
       }
-      if (panel) {
-        panel.classList.toggle('active', active);
+      if (propPanel) {
+        propPanel.classList.toggle('active', active);
       }
       if (!active) {
         clearPropagation();
       } else {
         setPropStatus('Select a node or click the map to set a transmitter.');
       }
+      layoutSidePanels();
     }
 
     function keepOverlaysAbovePropagation() {
@@ -1225,8 +1542,7 @@
 
     function formatDistance(meters) {
       if (!Number.isFinite(meters)) return 'unknown';
-      if (meters >= 1000) return `${(meters / 1000).toFixed(2)} km`;
-      return `${Math.round(meters)} m`;
+      return formatDistanceUnits(meters);
     }
 
     function haversineMeters(lat1, lon1, lat2, lon2) {
@@ -2034,6 +2350,7 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
         setPropStatus('Render already in progress.');
         return;
       }
+      resetPropagationRaster();
       const sensitivity = calcReceiverSensitivityDbm(
         PROP_DEFAULTS.bwHz,
         PROP_DEFAULTS.noiseFigureDb,
@@ -2133,7 +2450,6 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
         origin.name = meta ? meta.name : origin.name;
       }
       upsertPropagationOriginMarker(origin);
-      resetPropagationRaster();
       updatePropagationSummary();
       const label = propagationOrigins.length === 1 ? 'Origin set.' : `${propagationOrigins.length} origins set.`;
       markPropagationDirty(`${label} Click "Render prop" to calculate coverage.`);
@@ -2400,14 +2716,30 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
           keepInView: true,
           autoPanPadding: [18, 18]
         });
+        m.__suppressClick = false;
+        m.__longPressTimer = null;
+        m.__longPressFired = false;
+        const triggerLosSelect = () => {
+          if (!losActive) {
+            setLosActive(true);
+          }
+          handleLosPoint(m.getLatLng());
+          m.closePopup();
+        };
+        const cancelLongPress = () => {
+          if (m.__longPressTimer) {
+            clearTimeout(m.__longPressTimer);
+            m.__longPressTimer = null;
+          }
+        };
         m.on('click', (ev) => {
+          if (m.__suppressClick) {
+            m.__suppressClick = false;
+            return;
+          }
           const original = ev.originalEvent;
           if (original && original.shiftKey) {
-            if (!losActive) {
-              setLosActive(true);
-            }
-            handleLosPoint(m.getLatLng());
-            m.closePopup();
+            triggerLosSelect();
             original.preventDefault();
             original.stopPropagation();
             L.DomEvent.stop(ev);
@@ -2422,6 +2754,46 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
             }
             L.DomEvent.stop(ev);
           }
+        });
+        m.on('contextmenu', (ev) => {
+          m.__suppressClick = true;
+          triggerLosSelect();
+          if (ev && ev.originalEvent) {
+            ev.originalEvent.preventDefault();
+            ev.originalEvent.stopPropagation();
+          }
+          L.DomEvent.stop(ev);
+        });
+        m.on('touchstart', (ev) => {
+          m.__longPressFired = false;
+          cancelLongPress();
+          m.__longPressTimer = setTimeout(() => {
+            m.__longPressFired = true;
+            m.__suppressClick = true;
+            triggerLosSelect();
+          }, 550);
+          if (ev && ev.originalEvent) {
+            ev.originalEvent.preventDefault();
+            ev.originalEvent.stopPropagation();
+          }
+          L.DomEvent.stop(ev);
+        });
+        m.on('touchmove', () => {
+          cancelLongPress();
+        });
+        m.on('touchend', (ev) => {
+          cancelLongPress();
+          if (m.__longPressFired) {
+            if (ev && ev.originalEvent) {
+              ev.originalEvent.preventDefault();
+              ev.originalEvent.stopPropagation();
+            }
+            L.DomEvent.stop(ev);
+          }
+        });
+        m.on('touchcancel', () => {
+          cancelLongPress();
+          m.__longPressFired = false;
         });
         markers.set(id, m);
         updateMarkerLabel(m, d);
@@ -2464,7 +2836,6 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
           origin.lon = d.lon;
           origin.name = d.name || origin.name;
           upsertPropagationOriginMarker(origin);
-          resetPropagationRaster();
           updatePropagationSummary();
           markPropagationDirty('Origin moved. Click "Render prop" to update.');
           return;
@@ -2503,7 +2874,6 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
             }
           });
           propagationOrigins = propagationOrigins.filter(origin => !(origin.id && ids.includes(origin.id)));
-          resetPropagationRaster();
           updatePropagationSummary();
           if (!propagationOrigins.length) {
             setPropStatus('Select a node or click the map to set a transmitter.');
@@ -2982,6 +3352,37 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
     }
     setBaseLayer(baseLayer);
 
+    const unitsToggle = document.getElementById('units-toggle');
+    function setUnitsLabel() {
+      if (!unitsToggle) return;
+      unitsToggle.textContent = distanceUnits === 'mi' ? 'Units: mi' : 'Units: km';
+    }
+    function setDistanceUnits(units, persist = true) {
+      if (!validUnits.has(units)) return;
+      distanceUnits = units;
+      if (persist) {
+        localStorage.setItem('meshmapDistanceUnits', units);
+      }
+      setUnitsLabel();
+      if (lastLosDistance != null && losProfileData.length) {
+        updateLosProfileAtDistance(lastLosDistance);
+      }
+      if (lastLosStatusMeta) {
+        setLosStatus(buildLosStatus(lastLosStatusMeta));
+      }
+      updatePropagationSummary();
+      if (propagationRasterMeta && propagationOrigins.length) {
+        updatePropagationStatusFromRaster();
+      }
+    }
+    setUnitsLabel();
+    if (unitsToggle) {
+      unitsToggle.addEventListener('click', () => {
+        const next = distanceUnits === 'mi' ? 'km' : 'mi';
+        setDistanceUnits(next);
+      });
+    }
+
     const labelsToggle = document.getElementById('labels-toggle');
     if (labelsToggle) {
       labelsToggle.addEventListener('click', () => {
@@ -3007,10 +3408,19 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
       searchResults.hidden = true;
       searchResults.innerHTML = '';
     });
+    window.addEventListener('resize', () => {
+      layoutSidePanels();
+    });
 
     if (losProfileSvg) {
       losProfileSvg.addEventListener('mousemove', updateLosProfileHover);
       losProfileSvg.addEventListener('mouseleave', clearLosProfileHover);
+      losProfileSvg.addEventListener('click', (ev) => {
+        const distance = losProfileDistanceFromEvent(ev);
+        if (distance == null) return;
+        updateLosProfileAtDistance(distance);
+        copyLosCoords(distance);
+      });
     }
 
     const losToggle = document.getElementById('los-toggle');
@@ -3021,8 +3431,9 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
     }
 
     function handleLosPoint(latlng) {
-      if (losPoints.length >= 2) {
-        clearLos();
+      if (losLocked || losPoints.length >= 2) {
+        setLosStatus('LOS: Clear to start a new path');
+        return;
       }
       losPoints.push(latlng);
       L.circleMarker(latlng, {
@@ -3038,6 +3449,7 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
         return;
       }
       if (losPoints.length === 2) {
+        losLocked = true;
         losLine = L.polyline([losPoints[0], losPoints[1]], {
           color: '#9ca3af',
           weight: 4,
@@ -3052,6 +3464,15 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
         losLine.on('mouseout', clearLosProfileHover);
         runLosCheck();
       }
+    }
+
+    if (losClearButton) {
+      losClearButton.addEventListener('click', () => {
+        clearLos();
+        if (losActive) {
+          setLosStatus('LOS: select first point (Shift+click or long-press nodes)');
+        }
+      });
     }
     const nodesToggle = document.getElementById('nodes-toggle');
     if (nodesToggle) {
@@ -3239,7 +3660,6 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
           clearPropagationOrigins();
           propagationOrigins = [first];
           upsertPropagationOriginMarker(first);
-          resetPropagationRaster();
           updatePropagationSummary();
           markPropagationDirty('Multi-origin disabled. Keeping first origin only.');
         } else {
@@ -3360,6 +3780,10 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
     }
 
     map.on('click', (ev) => {
+      const target = ev && ev.originalEvent ? ev.originalEvent.target : null;
+      if (target && target.closest && target.closest('.leaflet-popup')) {
+        return;
+      }
       if (losActive) {
         handleLosPoint(ev.latlng);
         return;

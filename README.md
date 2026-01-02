@@ -13,10 +13,11 @@ Live example: https://live.bostonme.sh/
 - Heat map for the last 10 minutes of message activity (includes adverts)
 - Persistent device state and optional trails (disable with `TRAIL_LEN=0`)
 - 24-hour route history overlay (toggle) with volume-based coloring and click-to-view packet details
-- UI controls: legend toggle, dark map, topo map, labels toggle, hide nodes, heat toggle
+- UI controls: legend toggle, dark map, topo map, units toggle (km/mi), labels toggle, hide nodes, heat toggle
 - Node search by name or public key
-- LOS tool with elevation profile + peak markers and hover sync
+- LOS tool with elevation profile + peak markers and hover sync (Shift+click or long‑press nodes)
 - Embeddable metadata (Open Graph/Twitter tags) driven by env vars
+- Propagation panel lives on the right and keeps the last render until you generate a new one
 
 ## Project Structure
 - `backend/app.py`: FastAPI server, MQTT ingest, MeshCore decoding, persistence
@@ -60,6 +61,7 @@ Site metadata (page title + embeds):
 - `SITE_URL` (public URL)
 - `SITE_ICON`
 - `SITE_FEED_NOTE`
+- `DISTANCE_UNITS` (`km` or `mi`, default display units)
 
 MQTT:
 - `MQTT_HOST`
@@ -130,6 +132,7 @@ Use it:
 - Runtime state is persisted to `data/state.json`.
 - MQTT disconnects are handled; the client will reconnect when the broker returns.
 - Line-of-sight tool: click **LOS tool** and pick two points, or **Shift+click** two nodes to measure LOS between them.
+- On mobile, long‑press a node to select it for LOS.
 - LOS runs server-side via `/los` (no client-side elevation fetch).
 - Dark map also darkens node popups for readability.
 - Route styling uses payload type: 2/5 = Message (blue), 8/9 = Trace (orange), 4 = Advert (green).

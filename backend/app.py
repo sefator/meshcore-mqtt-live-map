@@ -84,6 +84,9 @@ SITE_OG_IMAGE = os.getenv("SITE_OG_IMAGE", "")
 SITE_URL = os.getenv("SITE_URL", "/")
 SITE_ICON = os.getenv("SITE_ICON", "/static/logo.png")
 SITE_FEED_NOTE = os.getenv("SITE_FEED_NOTE", "Feed: Boston MQTT.")
+DISTANCE_UNITS = os.getenv("DISTANCE_UNITS", "km").strip().lower()
+if DISTANCE_UNITS not in ("km", "mi"):
+  DISTANCE_UNITS = "km"
 try:
   MAP_START_LAT = float(os.getenv("MAP_START_LAT", "42.3601"))
 except ValueError:
@@ -2446,6 +2449,7 @@ def root():
     "SITE_URL": SITE_URL,
     "SITE_ICON": SITE_ICON,
     "SITE_FEED_NOTE": SITE_FEED_NOTE,
+    "DISTANCE_UNITS": DISTANCE_UNITS,
     "TRAIL_INFO_SUFFIX": trail_info_suffix,
     "PROD_MODE": str(PROD_MODE).lower(),
     "PROD_TOKEN": PROD_TOKEN,
