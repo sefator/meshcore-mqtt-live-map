@@ -48,12 +48,14 @@ This project renders live MeshCore traffic on a Leaflet + OpenStreetMap map. A F
 - Trail text in the HUD is only shown when `TRAIL_LEN > 0`; `TRAIL_LEN=0` disables trails entirely.
 - Hide Nodes toggle hides markers, trails, heat, routes, and history layers.
 - Heat toggle can hide the heatmap; it defaults on and the button turns green when heat is off.
+- HUD logo uses `SITE_ICON`; if unset or broken it falls back to a small “Map” badge so the toggle still works.
 - History line weight was reduced for improved readability.
 - Propagation overlay keeps heat/routes/trails/markers above it after render; the panel lives on the right and retains the last render until you generate a new one.
 - Heatmap includes all route payload types (adverts are no longer skipped).
 - MQTT online status shows as a green marker outline and popup status; it uses `mqtt_seen_ts` from `/status` or `/packets` topics (configurable).
 - PWA install support is enabled via `/manifest.webmanifest` and a service worker at `/sw.js`.
 - Clicking the HUD logo hides/shows the left panel while tool panels stay open.
+- Service worker uses `no-store` for navigation requests so env-driven UI toggles (like the radius ring) update without clearing site data.
 
 ## LOS (Line of Sight) Tool
 - LOS runs **server-side only** via `/los` (no client-side elevation fetch).
