@@ -16,6 +16,8 @@ from config import (
   ROUTE_HISTORY_PAYLOAD_TYPES,
 )
 from decoder import _coords_are_zero
+from los import _haversine_m
+from config import MAP_RADIUS_KM, MAP_START_LAT, MAP_START_LON
 
 ROUTE_HISTORY_PAYLOAD_TYPES_SET: Set[int] = set()
 for _part in ROUTE_HISTORY_PAYLOAD_TYPES.split(","):
@@ -38,6 +40,13 @@ def _history_payload_allowed(payload_type: Optional[int]) -> bool:
   return payload_type in ROUTE_HISTORY_PAYLOAD_TYPES_SET
 
 
+def _within_map_radius(lat: float, lon: float) -> bool:
+  if MAP_RADIUS_KM <= 0:
+    return True
+  distance_m = _haversine_m(MAP_START_LAT, MAP_START_LON, lat, lon)
+  return distance_m <= (MAP_RADIUS_KM * 1000.0)
+
+
 def _normalize_history_point(point: Any) -> Optional[Tuple[float, float]]:
   if not isinstance(point, (list, tuple)) or len(point) < 2:
     return None
@@ -47,6 +56,8 @@ def _normalize_history_point(point: Any) -> Optional[Tuple[float, float]]:
   except (TypeError, ValueError):
     return None
   if _coords_are_zero(lat_val, lon_val):
+    return None
+  if not _within_map_radius(lat_val, lon_val):
     return None
   return (round(lat_val, 6), round(lon_val, 6))
 

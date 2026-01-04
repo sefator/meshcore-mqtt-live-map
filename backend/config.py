@@ -81,6 +81,13 @@ try:
 except ValueError:
   MAP_START_ZOOM = 10
 MAP_DEFAULT_LAYER = os.getenv("MAP_DEFAULT_LAYER", "light").strip().lower()
+try:
+  MAP_RADIUS_KM = float(os.getenv("MAP_RADIUS_KM", "0"))
+except ValueError:
+  MAP_RADIUS_KM = 0.0
+if MAP_RADIUS_KM < 0:
+  MAP_RADIUS_KM = 0.0
+MAP_RADIUS_SHOW = os.getenv("MAP_RADIUS_SHOW", "false").lower() == "true"
 
 PROD_MODE = os.getenv("PROD_MODE", "false").lower() == "true"
 PROD_TOKEN = os.getenv("PROD_TOKEN", "").strip()

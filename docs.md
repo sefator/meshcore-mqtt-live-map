@@ -40,6 +40,7 @@ This project renders live MeshCore traffic on a Leaflet + OpenStreetMap map. A F
 - Legend is collapsible and persisted to localStorage.
 - HUD is capped to `90vh` and scrolls to avoid running off-screen.
 - Map start position is configurable with `MAP_START_LAT`, `MAP_START_LON`, `MAP_START_ZOOM`.
+- Radius filter: `MAP_RADIUS_KM=241.4` (150mi) drops nodes/routes/history outside the circle; set `0` to disable. `MAP_RADIUS_SHOW=true` draws a debug circle.
 - Default base layer can be set with `MAP_DEFAULT_LAYER` (localStorage overrides).
 - Units toggle (km/mi) is site-wide; default from `DISTANCE_UNITS` and stored in localStorage.
 - Node search (name or key) and a labels toggle (persisted to localStorage).

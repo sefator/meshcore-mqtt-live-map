@@ -108,6 +108,8 @@ Heat + online status:
 Map + LOS:
 - `MAP_START_LAT` / `MAP_START_LON` / `MAP_START_ZOOM` (default map view)
 - `MAP_DEFAULT_LAYER` (`light`, `dark`, or `topo`; localStorage overrides)
+- `MAP_RADIUS_KM` (default `241.4` km ≈ 150mi; `0` disables radius filtering)
+- `MAP_RADIUS_SHOW` (`true` draws the radius debug circle)
 - `LOS_ELEVATION_URL` (elevation API for LOS tool)
 - `LOS_SAMPLE_MIN` / `LOS_SAMPLE_MAX` / `LOS_SAMPLE_STEP_METERS`
 - `ELEVATION_CACHE_TTL` (seconds)

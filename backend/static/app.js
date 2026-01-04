@@ -2,6 +2,8 @@
     const mapStartLat = parseFloat(config.mapStartLat) || 42.3601;
     const mapStartLon = parseFloat(config.mapStartLon) || -71.1500;
     const mapStartZoom = Number(config.mapStartZoom) || 10;
+    const mapRadiusKm = Number(config.mapRadiusKm) || 0;
+    const mapRadiusShow = String(config.mapRadiusShow).toLowerCase() === 'true';
     let baseLayer = (config.mapDefaultLayer || 'light').toLowerCase();
     if (baseLayer !== 'dark' && baseLayer !== 'topo' && baseLayer !== 'light') {
       baseLayer = 'light';
@@ -21,6 +23,18 @@
       maxZoom: 17,
       attribution: '&copy; OpenStreetMap contributors &copy; OpenTopoMap'
     });
+    let mapRadiusCircle = null;
+    if (mapRadiusShow && mapRadiusKm > 0) {
+      mapRadiusCircle = L.circle([mapStartLat, mapStartLon], {
+        radius: mapRadiusKm * 1000.0,
+        color: '#38bdf8',
+        weight: 2,
+        dashArray: '6 8',
+        fillColor: '#38bdf8',
+        fillOpacity: 0.05,
+        interactive: false
+      }).addTo(map);
+    }
     const storedLayer = localStorage.getItem('meshmapBaseLayer');
     if (storedLayer === 'dark' || storedLayer === 'topo' || storedLayer === 'light') {
       baseLayer = storedLayer;

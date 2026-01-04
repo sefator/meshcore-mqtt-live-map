@@ -99,6 +99,8 @@ from config import (
   MAP_START_LAT,
   MAP_START_LON,
   MAP_START_ZOOM,
+  MAP_RADIUS_KM,
+  MAP_RADIUS_SHOW,
   MAP_DEFAULT_LAYER,
   PROD_MODE,
   PROD_TOKEN,
@@ -206,6 +208,33 @@ def _iso_from_ts(ts: Optional[float]) -> Optional[str]:
     return datetime.fromtimestamp(float(ts), tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
   except Exception:
     return None
+
+
+def _within_map_radius(lat: Any, lon: Any) -> bool:
+  if MAP_RADIUS_KM <= 0:
+    return True
+  try:
+    lat_val = float(lat)
+    lon_val = float(lon)
+  except (TypeError, ValueError):
+    return False
+  distance_m = _haversine_m(MAP_START_LAT, MAP_START_LON, lat_val, lon_val)
+  return distance_m <= (MAP_RADIUS_KM * 1000.0)
+
+
+def _evict_device(device_id: str) -> bool:
+  removed = False
+  if device_id in devices:
+    devices.pop(device_id, None)
+    removed = True
+  trails.pop(device_id, None)
+  seen_devices.pop(device_id, None)
+  mqtt_seen.pop(device_id, None)
+  last_seen_broadcast.pop(device_id, None)
+  if removed:
+    state.state_dirty = True
+    _rebuild_node_hash_map()
+  return removed
 
 
 def _device_role_code(value: Any) -> int:
@@ -343,7 +372,7 @@ def _load_state() -> None:
       state = DeviceState(**value)
     except Exception:
       continue
-    if _coords_are_zero(state.lat, state.lon):
+    if _coords_are_zero(state.lat, state.lon) or not _within_map_radius(state.lat, state.lon):
       dropped_ids.add(str(key))
       continue
     loaded_devices[key] = state
@@ -370,7 +399,7 @@ def _load_state() -> None:
         lon_val = float(lon)
       except (TypeError, ValueError):
         continue
-      if _coords_are_zero(lat_val, lon_val):
+      if _coords_are_zero(lat_val, lon_val) or not _within_map_radius(lat_val, lon_val):
         trails_dirty = True
         continue
       filtered.append(list(entry))
@@ -466,6 +495,7 @@ def mqtt_on_message(client, userdata, msg: mqtt.MQTTMessage):
   stats["last_rx_ts"] = time.time()
   stats["last_rx_topic"] = msg.topic
   topic_counts[msg.topic] = topic_counts.get(msg.topic, 0) + 1
+  loop: asyncio.AbstractEventLoop = userdata["loop"]
 
   dev_guess = _device_id_from_topic(msg.topic)
   if dev_guess and _topic_marks_online(msg.topic):
@@ -476,7 +506,6 @@ def mqtt_on_message(client, userdata, msg: mqtt.MQTTMessage):
       last_sent = last_seen_broadcast.get(dev_guess, 0)
       if now - last_sent >= MQTT_SEEN_BROADCAST_MIN_SECONDS:
         last_seen_broadcast[dev_guess] = now
-        loop: asyncio.AbstractEventLoop = userdata["loop"]
         loop.call_soon_threadsafe(update_queue.put_nowait, {
           "type": "device_seen",
           "device_id": dev_guess,
@@ -485,9 +514,19 @@ def mqtt_on_message(client, userdata, msg: mqtt.MQTTMessage):
         })
 
   parsed, debug = _try_parse_payload(msg.topic, msg.payload)
+  device_id_hint = parsed.get("device_id") if parsed else None
   if parsed and _coords_are_zero(parsed.get("lat", 0), parsed.get("lon", 0)):
     debug["result"] = "filtered_zero_coords"
     parsed = None
+  if parsed and not _within_map_radius(parsed.get("lat"), parsed.get("lon")):
+    debug["result"] = "filtered_radius"
+    parsed = None
+    if device_id_hint:
+      loop.call_soon_threadsafe(update_queue.put_nowait, {
+        "type": "device_remove",
+        "device_id": device_id_hint,
+        "reason": "radius",
+      })
   origin_id = debug.get("origin_id") or _device_id_from_topic(msg.topic)
   decoder_meta = debug.get("decoder_meta") or {}
   result = debug.get("result") or "unknown"
@@ -731,6 +770,20 @@ async def broadcaster():
           clients.discard(ws)
       continue
 
+    if isinstance(event, dict) and event.get("type") == "device_remove":
+      device_id = event.get("device_id")
+      if device_id and _evict_device(device_id):
+        payload = {"type": "stale", "device_ids": [device_id]}
+        dead = []
+        for ws in list(clients):
+          try:
+            await ws.send_text(json.dumps(payload))
+          except Exception:
+            dead.append(ws)
+        for ws in dead:
+          clients.discard(ws)
+      continue
+
     if isinstance(event, dict) and event.get("type") == "route":
       route_mode = event.get("route_mode")
       points = event.get("points")
@@ -756,6 +809,15 @@ async def broadcaster():
 
       if not points:
         continue
+
+      if MAP_RADIUS_KM > 0:
+        outside = any(
+          not _within_map_radius(point[0], point[1])
+          for point in points
+          if isinstance(point, (list, tuple)) and len(point) >= 2
+        )
+        if outside:
+          continue
 
       route_id = event.get("route_id") or event.get("message_hash") or f"{event.get('origin_id', 'route')}-{int(event.get('ts', time.time()) * 1000)}"
       expires_at = (event.get("ts") or time.time()) + ROUTE_TTL_SECONDS
@@ -812,6 +874,18 @@ async def broadcaster():
     upd = event.get("data") if isinstance(event, dict) and event.get("type") == "device" else event
 
     device_id = upd["device_id"]
+    if not _within_map_radius(upd.get("lat"), upd.get("lon")):
+      if _evict_device(device_id):
+        payload = {"type": "stale", "device_ids": [device_id]}
+        dead = []
+        for ws in list(clients):
+          try:
+            await ws.send_text(json.dumps(payload))
+          except Exception:
+            dead.append(ws)
+        for ws in dead:
+          clients.discard(ws)
+      continue
     is_new_device = device_id not in devices
     device_state = DeviceState(
       device_id=device_id,
@@ -984,6 +1058,8 @@ def root():
     "MAP_START_LAT": MAP_START_LAT,
     "MAP_START_LON": MAP_START_LON,
     "MAP_START_ZOOM": MAP_START_ZOOM,
+    "MAP_RADIUS_KM": MAP_RADIUS_KM,
+    "MAP_RADIUS_SHOW": str(MAP_RADIUS_SHOW).lower(),
     "MAP_DEFAULT_LAYER": MAP_DEFAULT_LAYER,
     "LOS_ELEVATION_URL": LOS_ELEVATION_URL,
     "LOS_SAMPLE_MIN": LOS_SAMPLE_MIN,
