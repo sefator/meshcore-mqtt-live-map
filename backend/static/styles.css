@@ -158,6 +158,16 @@
     }
     .node-search-item:hover { background: rgba(255,255,255,.12); }
     .node-search-id { opacity: 0.7; }
+    .node-size-control {
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .node-size-label { opacity: 0.85; }
+    .node-size-range { flex: 1; accent-color: #22c55e; }
+    .node-size-value { min-width: 30px; text-align: right; opacity: 0.75; }
     .node-label {
       background: rgba(15,23,42,.8);
       color: #fff;

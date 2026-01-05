@@ -33,6 +33,7 @@ When adding UI controls:
 - Keep HUD layout stable on mobile (test at narrow widths).
 - If `SITE_ICON` is optional, include a text fallback for the HUD toggle.
 - If you add view state, decide whether it should persist in localStorage or only via URL params (History tool defaults off).
+- Node marker size defaults to `NODE_MARKER_RADIUS` and can be overridden by the HUD slider (persisted in localStorage).
 
 ## API Changes
 - Document new endpoints in `docs.md`.

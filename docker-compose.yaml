@@ -17,6 +17,7 @@ services:
       SITE_ICON: "${SITE_ICON:-/static/logo.png}"
       SITE_FEED_NOTE: "${SITE_FEED_NOTE:-Feed: Boston MQTT.}"
       DISTANCE_UNITS: "${DISTANCE_UNITS:-km}"
+      NODE_MARKER_RADIUS: "${NODE_MARKER_RADIUS:-8}"
       MQTT_HOST: "${MQTT_HOST:-localhost}"
       MQTT_PORT: "${MQTT_PORT:-1883}"
       MQTT_USERNAME: "${MQTT_USERNAME:-}"

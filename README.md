@@ -22,6 +22,7 @@ Live example sites:
 - Share button that copies a URL with current view + settings
 - URL parameters to open the map at a specific view (center, zoom, toggles)
 - Node search by name or public key
+- Adjustable node size slider (defaults from env, saves locally)
 - LOS tool with elevation profile + peak markers and hover sync (Shift+click or long‑press nodes)
 - Embeddable metadata (Open Graph/Twitter tags) driven by env vars
 - Propagation panel lives on the right and keeps the last render until you generate a new one
@@ -79,6 +80,7 @@ Site metadata (page title + embeds):
 - `SITE_ICON`
 - `SITE_FEED_NOTE`
 - `DISTANCE_UNITS` (`km` or `mi`, default display units)
+- `NODE_MARKER_RADIUS` (default node marker size in pixels)
 
 MQTT:
 - `MQTT_HOST`

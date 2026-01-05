@@ -69,6 +69,12 @@ DISTANCE_UNITS = os.getenv("DISTANCE_UNITS", "km").strip().lower()
 if DISTANCE_UNITS not in ("km", "mi"):
   DISTANCE_UNITS = "km"
 try:
+  NODE_MARKER_RADIUS = float(os.getenv("NODE_MARKER_RADIUS", "8"))
+except ValueError:
+  NODE_MARKER_RADIUS = 8.0
+if NODE_MARKER_RADIUS <= 0:
+  NODE_MARKER_RADIUS = 8.0
+try:
   MAP_START_LAT = float(os.getenv("MAP_START_LAT", "42.3601"))
 except ValueError:
   MAP_START_LAT = 42.3601

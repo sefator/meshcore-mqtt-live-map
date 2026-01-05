@@ -25,7 +25,7 @@
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   />
-  <link rel="stylesheet" href="/static/styles.css?v=historytool11" />
+  <link rel="stylesheet" href="/static/styles.css?v=nodesize1" />
 </head>
 <body
   data-map-start-lat="{{MAP_START_LAT}}"
@@ -43,6 +43,7 @@
   data-los-peaks-max="{{LOS_PEAKS_MAX}}"
   data-mqtt-online-seconds="{{MQTT_ONLINE_SECONDS}}"
   data-distance-units="{{DISTANCE_UNITS}}"
+  data-node-radius="{{NODE_MARKER_RADIUS}}"
 >
   <script>
     window.__meshmapStarted = false;
@@ -74,6 +75,11 @@
       <div class="node-search">
         <input class="node-search-input" id="node-search" type="text" placeholder="Search nodes by name or key..." autocomplete="off" />
         <div class="node-search-results" id="node-search-results" hidden></div>
+      </div>
+      <div class="node-size-control">
+        <span class="node-size-label">Node size</span>
+        <input class="node-size-range" id="node-size" type="range" min="4" max="14" step="1" />
+        <span class="node-size-value" id="node-size-value"></span>
       </div>
       <button class="legend-toggle" id="legend-toggle" type="button">Hide legend</button>
       <button class="map-toggle" id="map-toggle" type="button">Dark map</button>
@@ -227,6 +233,6 @@
   ></script>
   <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js" crossorigin="anonymous"></script>
 
-  <script src="/static/app.js?v=historytool11" defer></script>
+  <script src="/static/app.js?v=nodesize1" defer></script>
 </body>
 </html>

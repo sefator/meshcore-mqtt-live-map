@@ -43,6 +43,7 @@ This project renders live MeshCore traffic on a Leaflet + OpenStreetMap map. A F
 - Radius filter: `MAP_RADIUS_KM=241.4` (150mi) drops nodes/routes/history outside the circle; set `0` to disable. `MAP_RADIUS_SHOW=true` draws a debug circle.
 - Default base layer can be set with `MAP_DEFAULT_LAYER` (localStorage overrides).
 - Units toggle (km/mi) is site-wide; default from `DISTANCE_UNITS` and stored in localStorage.
+- Node size slider defaults from `NODE_MARKER_RADIUS` and persists in localStorage.
 - Node search (name or key) and a labels toggle (persisted to localStorage).
 - History tool defaults off and opens a right-side panel with a heat filter slider (visibility is not persisted).
 - History slider modes: 0 = All, 1 = Blue only, 2 = Yellow only, 3 = Yellow + Red, 4 = Red only.
@@ -140,6 +141,7 @@ If routes aren’t visible:
 - Fixed MQTT disconnect callback signature so broker drops don’t crash the MQTT loop.
 - Route hash collisions are now ignored (unique-only) and long path lists are skipped (`ROUTE_PATH_MAX_LEN`).
 - Trails can be disabled by setting `TRAIL_LEN=0` (HUD trail text is removed).
+- Node marker size can be tuned via `NODE_MARKER_RADIUS` (users can override locally).
 - Units toggle defaults from `DISTANCE_UNITS` and persists in localStorage.
 - Mobile LOS selection supports long-press on nodes.
 - History tool visibility no longer persists (always off unless `history=on` in the URL).

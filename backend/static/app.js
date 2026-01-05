@@ -8,6 +8,7 @@
       const num = Number(str);
       return Number.isFinite(num) ? num : null;
     };
+    const clampNumber = (value, min, max) => Math.min(max, Math.max(min, value));
     const parseBoolParam = (value) => {
       if (value == null) return null;
       const str = String(value).trim().toLowerCase();
@@ -160,6 +161,8 @@
     const deviceData = new Map();
     const searchInput = document.getElementById('node-search');
     const searchResults = document.getElementById('node-search-results');
+    const nodeSizeInput = document.getElementById('node-size');
+    const nodeSizeValue = document.getElementById('node-size-value');
     let searchMatches = [];
     const storedLabels = localStorage.getItem('meshmapShowLabels');
     let showLabels = storedLabels === 'true';
@@ -175,6 +178,19 @@
     if (validUnits.has(queryUnits)) {
       distanceUnits = queryUnits;
       localStorage.setItem('meshmapDistanceUnits', distanceUnits);
+    }
+    const NODE_RADIUS_MIN = 4;
+    const NODE_RADIUS_MAX = 14;
+    const envNodeRadius = Number(config.nodeRadius);
+    const defaultNodeRadius = Number.isFinite(envNodeRadius) ? envNodeRadius : 8;
+    let nodeMarkerRadius = defaultNodeRadius;
+    const storedRadius = parseNumberParam(localStorage.getItem('meshmapNodeRadius'));
+    if (Number.isFinite(storedRadius)) {
+      nodeMarkerRadius = storedRadius;
+    }
+    nodeMarkerRadius = clampNumber(nodeMarkerRadius, NODE_RADIUS_MIN, NODE_RADIUS_MAX);
+    if (!Number.isFinite(storedRadius)) {
+      localStorage.setItem('meshmapNodeRadius', String(nodeMarkerRadius));
     }
     const historyLabel = document.getElementById('history-window-label');
     const historyFilter = document.getElementById('history-filter');
@@ -256,15 +272,15 @@
 
     function markerStyleForRole(role) {
       if (role === 'repeater') {
-        return { color: '#1d4ed8', fillColor: '#2b8cff', fillOpacity: 0.95, radius: 8, weight: 2 };
+        return { color: '#1d4ed8', fillColor: '#2b8cff', fillOpacity: 0.95, radius: nodeMarkerRadius, weight: 2 };
       }
       if (role === 'companion') {
-        return { color: '#6b21a8', fillColor: '#a855f7', fillOpacity: 0.95, radius: 8, weight: 2 };
+        return { color: '#6b21a8', fillColor: '#a855f7', fillOpacity: 0.95, radius: nodeMarkerRadius, weight: 2 };
       }
       if (role === 'room') {
-        return { color: '#b45309', fillColor: '#f59e0b', fillOpacity: 0.95, radius: 8, weight: 2 };
+        return { color: '#b45309', fillColor: '#f59e0b', fillOpacity: 0.95, radius: nodeMarkerRadius, weight: 2 };
       }
-      return { color: '#4b5563', fillColor: '#d1d5db', fillOpacity: 0.95, radius: 8, weight: 2 };
+      return { color: '#4b5563', fillColor: '#d1d5db', fillOpacity: 0.95, radius: nodeMarkerRadius, weight: 2 };
     }
 
     function markerStyleForDevice(d) {
@@ -289,6 +305,26 @@
       }
       const minutes = Math.max(1, Math.round(seconds / 60));
       return `${minutes} min`;
+    }
+
+    function updateNodeSizeUi() {
+      if (nodeSizeInput) {
+        nodeSizeInput.value = String(nodeMarkerRadius);
+      }
+      if (nodeSizeValue) {
+        nodeSizeValue.textContent = `${nodeMarkerRadius}px`;
+      }
+    }
+
+    function setNodeMarkerRadius(value, persist = true) {
+      const next = clampNumber(Number(value), NODE_RADIUS_MIN, NODE_RADIUS_MAX);
+      if (!Number.isFinite(next)) return;
+      nodeMarkerRadius = next;
+      if (persist) {
+        localStorage.setItem('meshmapNodeRadius', String(nodeMarkerRadius));
+      }
+      updateNodeSizeUi();
+      refreshOnlineMarkers();
     }
 
     function setNodesVisible(visible) {
@@ -3219,6 +3255,12 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
       nodesToggle.addEventListener('click', () => {
         setNodesVisible(!nodesVisible);
         localStorage.setItem('meshmapNodesVisible', nodesVisible ? 'true' : 'false');
+      });
+    }
+    updateNodeSizeUi();
+    if (nodeSizeInput) {
+      nodeSizeInput.addEventListener('input', (ev) => {
+        setNodeMarkerRadius(ev.target.value);
       });
     }
 
