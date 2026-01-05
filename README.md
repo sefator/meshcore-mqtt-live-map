@@ -54,6 +54,7 @@ cd meshcore-mqtt-live-map
 cp .env.example .env
 ```
 3) Edit `.env` with your MQTT broker and site metadata.
+   - See `howto.md` for a step-by-step guide to setting up the MQTT server and this live map.
 4) Build and run:
 ```bash
 docker compose up -d --build
