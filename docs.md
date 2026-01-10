@@ -53,6 +53,7 @@ This project renders live MeshCore traffic on a Leaflet + OpenStreetMap map. A F
 - History legend swatch is hidden unless the History tool is active.
 - Peers tool shows incoming/outgoing neighbors for a selected node, with counts and percentages pulled from route history.
 - Peers tool skips nodes listed in `MQTT_ONLINE_FORCE_NAMES` (observer listeners).
+- Coverage tool only appears when `COVERAGE_API_URL` is set; it fetches tiles on demand.
 - Trail text in the HUD is only shown when `TRAIL_LEN > 0`; `TRAIL_LEN=0` disables trails entirely.
 - Hide Nodes toggle hides markers, trails, heat, routes, and history layers.
 - Heat toggle can hide the heatmap; it defaults on and the button turns green when heat is off.

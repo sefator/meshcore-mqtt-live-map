@@ -116,6 +116,12 @@ MQTT_TLS=true
 MQTT_TOPIC=meshcore/#
 ```
 
+Optional: enable the coverage layer by setting `COVERAGE_API_URL` (the Coverage button hides itself when blank):
+
+```env
+COVERAGE_API_URL=https://coverage.example.com
+```
+
 If you are using plain TCP MQTT, set:
 
 ```env

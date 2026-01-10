@@ -19,6 +19,8 @@ Live example sites:
 - Heat map for the last 10 minutes of message activity (includes adverts)
 - Persistent device state and optional trails (disable with `TRAIL_LEN=0`)
 - 24-hour route history tool with volume-based coloring, click-to-view packet details, a heat-band slider, and a link-size slider
+- Peers tool showing incoming/outgoing neighbors with on-map lines
+- Coverage layer from a coverage map API (button hidden when not configured)
 - UI controls: legend toggle, dark map, topo map, units toggle (km/mi), labels toggle, hide nodes, heat toggle
 - Share button that copies a URL with current view + settings
 - URL parameters to open the map at a specific view (center, zoom, toggles)
@@ -95,7 +97,7 @@ MQTT:
 - `MQTT_TOPIC` (e.g. `meshcore/#` or `meshcore/#,other/topic/+` for multiple topics)
 
 Coverage layer:
-- `COVERAGE_API_URL` (URL to coverage map API, e.g. `http://localhost:3000` or `https://coverage.example.com`)
+- `COVERAGE_API_URL` (URL to coverage map API; button hidden when blank)
 
 Device + route tuning:
 - `DEVICE_TTL_SECONDS` (node expiry)
@@ -119,6 +121,7 @@ Heat + online status:
 - `MQTT_ONLINE_SECONDS` (online window for status ring)
 - `MQTT_ONLINE_TOPIC_SUFFIXES` (comma-separated topics that count as “online”)
 - `MQTT_SEEN_BROADCAST_MIN_SECONDS`
+- `MQTT_ONLINE_FORCE_NAMES` (comma-separated names to force as MQTT online; also excluded from peers)
 
 Map + LOS:
 - `MAP_START_LAT` / `MAP_START_LON` / `MAP_START_ZOOM` (default map view)
@@ -162,6 +165,7 @@ Use it:
 - On mobile, long‑press a node to select it for LOS.
 - LOS runs server-side via `/los` (no client-side elevation fetch).
 - History tool always loads off (use the button or `history=on` in the URL).
+- Peers tool uses route history segments; forced MQTT listeners are excluded from peer lists.
 - URL params override stored settings: `lat`, `lon`/`lng`/`long`, `zoom`, `layer`, `history`, `heat`, `labels`, `nodes`, `legend`, `menu`, `units`, `history_filter`.
 - Dark map also darkens node popups for readability.
 - Route styling uses payload type: 2/5 = Message (blue), 8/9 = Trace (orange), 4 = Advert (green).
@@ -185,6 +189,10 @@ https://your-host/api/nodes?token=YOUR_TOKEN&format=flat
 
 Each node includes:
 `public_key`, `name`, `device_role` (1/2/3), `last_seen` (ISO), `timestamp` (epoch), and `location` with `latitude`/`longitude`.
+
+Peer summary:
+- `GET /peers/{device_id}?token=YOUR_TOKEN`
+  - Returns incoming/outgoing neighbors with counts/percentages from route history.
 
 ## License
 [GPL-3.0](https://github.com/yellowcooln/meshcore-mqtt-live-map?tab=License-1-ov-file#).
