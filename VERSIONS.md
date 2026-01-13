@@ -4,6 +4,7 @@
 - Resolve short-hash collisions by choosing the closest node in the route chain (credit: https://github.com/sefator)
 - Drop hops that exceed `ROUTE_MAX_HOP_DISTANCE` to avoid unrealistic jumps
 - Add `ROUTE_INFRA_ONLY` to restrict route lines to repeaters/rooms
+- New envs: `ROUTE_MAX_HOP_DISTANCE`, `ROUTE_INFRA_ONLY`
 - Document new route env defaults in `.env.example`
 
 ## v1.0.4 (01-13-2026)
