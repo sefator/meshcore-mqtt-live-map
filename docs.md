@@ -1,13 +1,13 @@
 # Mesh Map Live: Implementation Notes
 
 This document captures the state of the project and the key changes made so far, so a new Codex session can pick up without losing context.
-Current version: `1.0.5` (see `VERSIONS.md`).
+Current version: `1.0.6` (see `VERSIONS.md`).
 
 ## Overview
 This project renders live MeshCore traffic on a Leaflet + OpenStreetMap map. A FastAPI backend subscribes to MQTT (WSS/TLS), decodes MeshCore packets using `@michaelhart/meshcore-decoder`, and broadcasts device updates and routes over WebSockets to the frontend. Core logic is split into config/state/decoder/LOS/history modules so changes are localized. The UI includes heatmap, LOS tools, map mode toggles, and a 24‑hour route history layer.
 
 ## Versioning
-- `VERSION.txt` holds the current version string (`1.0.5`).
+- `VERSION.txt` holds the current version string (`1.0.6`).
 - `VERSIONS.md` is an append-only changelog by version.
 
 ## Key Paths
@@ -66,6 +66,7 @@ This project renders live MeshCore traffic on a Leaflet + OpenStreetMap map. A F
 - History legend swatch is hidden unless the History tool is active.
 - Peers tool shows incoming/outgoing neighbors for a selected node, with counts and percentages pulled from route history.
 - Peers tool skips nodes listed in `MQTT_ONLINE_FORCE_NAMES` (observer listeners).
+- Peers panel legend clarifies line colors (incoming = blue, outgoing = purple).
 - Coverage tool only appears when `COVERAGE_API_URL` is set; it fetches tiles on demand.
 - Trail text in the HUD is only shown when `TRAIL_LEN > 0`; `TRAIL_LEN=0` disables trails entirely.
 - Hide Nodes toggle hides markers, trails, heat, routes, and history layers.
@@ -73,6 +74,7 @@ This project renders live MeshCore traffic on a Leaflet + OpenStreetMap map. A F
 - HUD logo uses `SITE_ICON`; if unset or broken it falls back to a small “Map” badge so the toggle still works.
 - History line weight was reduced for improved readability.
 - Propagation overlay keeps heat/routes/trails/markers above it after render; the panel lives on the right and retains the last render until you generate a new one.
+- Propagation origin markers can be removed individually by clicking them.
 - Heatmap includes all route payload types (adverts are no longer skipped).
 - MQTT online status shows as a green marker outline and popup status; it uses `mqtt_seen_ts` from `/status` or `/packets` topics (configurable).
 - `MQTT_ONLINE_FORCE_NAMES` can force named nodes to show as MQTT online regardless of last seen.
@@ -86,6 +88,7 @@ This project renders live MeshCore traffic on a Leaflet + OpenStreetMap map. A F
 - Update banner dismissal relies on `.hud-update[hidden]` to ensure the banner actually disappears.
 - URL params override stored settings: `lat`, `lon`/`lng`/`long`, `zoom`, `layer`, `history`, `heat`, `labels`, `nodes`, `legend`, `menu`, `units`, `history_filter`.
 - Service worker uses `no-store` for navigation requests so env-driven UI toggles (like the radius ring) update without clearing site data.
+- HUD scrollbars are custom styled in Chromium for a cleaner look.
 
 ## LOS (Line of Sight) Tool
 - LOS runs **server-side only** via `/los` (no client-side elevation fetch).

@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-Current version: `1.0.5` (see `VERSIONS.md`).
+Current version: `1.0.6` (see `VERSIONS.md`).
 
 ## Project Structure & Module Organization
 - `backend/app.py` wires FastAPI routes, MQTT lifecycle, and websocket broadcast flow.
@@ -17,7 +17,7 @@ Current version: `1.0.5` (see `VERSIONS.md`).
 - `docker-compose.yaml` runs the service as `meshmap-live`.
 - `data/` stores persisted state (`state.json`), route history (`route_history.jsonl`), and optional role overrides (`device_roles.json`).
 - `.env` holds dev runtime settings; `.env.example` mirrors template defaults.
-- `VERSION.txt` tracks the current version (now `1.0.5`); append changes in `VERSIONS.md`.
+- `VERSION.txt` tracks the current version (now `1.0.6`); append changes in `VERSIONS.md`.
 
 ## Build, Test, and Development Commands
 - `docker compose up -d --build` rebuilds and restarts the backend (preferred workflow).

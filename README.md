@@ -1,6 +1,6 @@
 # Mesh Live Map
 
-Version: `1.0.5` (see [VERSIONS.md](VERSIONS.md))
+Version: `1.0.6` (see [VERSIONS.md](VERSIONS.md))
 
 Live MeshCore traffic map that renders nodes, routes, and activity in real time on a Leaflet map. The backend subscribes to MQTT over WebSockets + TLS, decodes MeshCore packets with `@michaelhart/meshcore-decoder`, and streams updates to the browser via WebSockets.
 
@@ -8,8 +8,6 @@ Live example sites:
 - https://live.bostonme.sh/ - Greater Boston Mesh Map
 - https://map.eastmesh.au/ - Aus Eastern Mesh Live Map
 - https://mesh-map.e-l33t.org/ - NSW Mesh - Live Mesh Traffic Map
-- https://livemap.wcmesh.com/ - West Coast Mesh Live Map
-- https://mapa.meshcore.cz - Czech Republic Live Map
 
 
 ![Live map preview](example.gif)
@@ -23,7 +21,7 @@ Live example sites:
 - Heat map for the last 10 minutes of message activity (includes adverts)
 - Persistent device state and optional trails (disable with `TRAIL_LEN=0`)
 - 24-hour route history tool with volume-based coloring, click-to-view packet details, a heat-band slider, and a link-size slider
-- Peers tool showing incoming/outgoing neighbors with on-map lines
+- Peers tool showing incoming/outgoing neighbors with on-map lines (blue = incoming, purple = outgoing)
 - Coverage layer from a coverage map API (button hidden when not configured)
 - Update available banner (git local vs upstream) with dismiss
 - UI controls: legend toggle, dark map, topo map, units toggle (km/mi), labels toggle, hide nodes, heat toggle
@@ -35,7 +33,7 @@ Live example sites:
 - Embeddable metadata (Open Graph/Twitter tags) driven by env vars
 - Preview image renders in-bounds device dots for shared links
 - Route pruning via closest-hop selection + max hop distance (configurable)
-- Propagation panel lives on the right and keeps the last render until you generate a new one
+- Propagation panel lives on the right and keeps the last render until you generate a new one (click an origin marker to remove it)
 - Installable PWA (manifest + service worker) for Add to Home Screen
 - Click the logo to hide/show the left HUD panel while tools stay open
 

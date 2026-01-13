@@ -1768,6 +1768,25 @@
       propagationOriginMarkers.clear();
     }
 
+    function removePropagationOrigin(origin) {
+      if (!origin) return;
+      const key = getPropagationOriginKey(origin);
+      if (key && propagationOriginMarkers.has(key)) {
+        propagationLayer.removeLayer(propagationOriginMarkers.get(key));
+        propagationOriginMarkers.delete(key);
+      }
+      propagationOrigins = propagationOrigins.filter((item) => getPropagationOriginKey(item) !== key);
+      updatePropagationSummary();
+      if (!propagationOrigins.length) {
+        setPropStatus('Select a node or click the map to set a transmitter.');
+      } else {
+        markPropagationDirty('Origin removed. Click "Render prop" to update.');
+      }
+      if (propagationRasterMeta && !propagationNeedsRender) {
+        updatePropagationStatusFromRaster();
+      }
+    }
+
     function upsertPropagationOriginMarker(origin) {
       const key = getPropagationOriginKey(origin);
       if (!key) return;
@@ -1779,6 +1798,14 @@
           fillOpacity: 0.95,
           weight: 2
         }).addTo(propagationLayer);
+        marker.on('click', (ev) => {
+          if (ev && ev.originalEvent) {
+            ev.originalEvent.preventDefault();
+            ev.originalEvent.stopPropagation();
+          }
+          L.DomEvent.stop(ev);
+          removePropagationOrigin(origin);
+        });
         propagationOriginMarkers.set(key, marker);
       } else {
         const marker = propagationOriginMarkers.get(key);

@@ -16,6 +16,40 @@
       overflow-x: hidden;
       box-sizing: border-box;
     }
+    .hud,
+    .prop-panel,
+    .peers-panel,
+    .node-search-results {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(148,163,184,.7) rgba(15,23,42,.35);
+    }
+    .hud::-webkit-scrollbar,
+    .prop-panel::-webkit-scrollbar,
+    .peers-panel::-webkit-scrollbar,
+    .node-search-results::-webkit-scrollbar {
+      width: 10px;
+    }
+    .hud::-webkit-scrollbar-track,
+    .prop-panel::-webkit-scrollbar-track,
+    .peers-panel::-webkit-scrollbar-track,
+    .node-search-results::-webkit-scrollbar-track {
+      background: rgba(15,23,42,.35);
+      border-radius: 8px;
+    }
+    .hud::-webkit-scrollbar-thumb,
+    .prop-panel::-webkit-scrollbar-thumb,
+    .peers-panel::-webkit-scrollbar-thumb,
+    .node-search-results::-webkit-scrollbar-thumb {
+      background: rgba(148,163,184,.7);
+      border-radius: 8px;
+      border: 2px solid rgba(15,23,42,.35);
+    }
+    .hud::-webkit-scrollbar-thumb:hover,
+    .prop-panel::-webkit-scrollbar-thumb:hover,
+    .peers-panel::-webkit-scrollbar-thumb:hover,
+    .node-search-results::-webkit-scrollbar-thumb:hover {
+      background: rgba(226,232,240,.85);
+    }
     .hud-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .hud-brand { display: flex; align-items: center; gap: 8px; }
     .hud-toggle {
