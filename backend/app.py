@@ -6,7 +6,7 @@ import time
 import subprocess
 from datetime import datetime, timezone
 from dataclasses import asdict
-from typing import Any, Dict, Optional, Set, List
+from typing import Any, Dict, Optional, Set, List, Tuple
 
 import httpx
 import paho.mqtt.client as mqtt
@@ -1366,6 +1366,45 @@ async def preview_image(
 
       print(f"[preview] Fetched {tiles_fetched} tiles, {tiles_failed} failed")
 
+      # Draw current devices (all in-bounds, no cap)
+      def latlon_to_global_px(lat_deg: float, lon_deg: float, zoom_level: int) -> Tuple[float, float]:
+        lat_rad = math.radians(lat_deg)
+        n = 2.0 ** zoom_level
+        x_px = (lon_deg + 180.0) / 360.0 * n * tile_size
+        y_px = (1.0 - math.asinh(math.tan(lat_rad)) / math.pi) / 2.0 * n * tile_size
+        return (x_px, y_px)
+
+      draw = ImageDraw.Draw(final_image)
+      center_px_x, center_px_y = latlon_to_global_px(lat, lon, zoom_val)
+      node_radius = 5
+      node_color = (86, 198, 255) if theme_str == "dark" else (25, 83, 170)
+      node_outline = (15, 15, 15) if theme_str == "dark" else (255, 255, 255)
+      for state in list(devices.values()):
+        try:
+          dev_lat = float(state.lat)
+          dev_lon = float(state.lon)
+        except Exception:
+          continue
+        if _coords_are_zero(dev_lat, dev_lon) or not _within_map_radius(dev_lat, dev_lon):
+          continue
+        dev_px_x, dev_px_y = latlon_to_global_px(dev_lat, dev_lon, zoom_val)
+        img_x = width / 2 + (dev_px_x - center_px_x)
+        img_y = height / 2 + (dev_px_y - center_px_y)
+        if (
+          img_x < -node_radius
+          or img_x > width + node_radius
+          or img_y < -node_radius
+          or img_y > height + node_radius
+        ):
+          continue
+        draw.ellipse(
+          [(img_x - node_radius, img_y - node_radius),
+           (img_x + node_radius, img_y + node_radius)],
+          fill=node_color,
+          outline=node_outline,
+          width=2
+        )
+
       # Draw marker
       marker_color_map = {
         'red': (220, 53, 69),
@@ -1383,7 +1422,6 @@ async def preview_image(
       marker_x = width // 2
       marker_y = height // 2
 
-      draw = ImageDraw.Draw(final_image)
       # Draw a circle marker
       marker_radius = 12
       draw.ellipse(
