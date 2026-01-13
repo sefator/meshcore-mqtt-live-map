@@ -18,6 +18,7 @@ from config import (
   NODE_SCRIPT_PATH,
   PAYLOAD_PREVIEW_MAX,
   ROUTE_PATH_MAX_LEN,
+  ROUTE_MAX_HOP_DISTANCE,
   ROUTE_PAYLOAD_TYPES,
 )
 from state import (
@@ -292,9 +293,6 @@ def _choose_closest_device(node_hash: str, ref_lat: float, ref_lon: float,
   candidates = node_hash_candidates.get(node_hash)
   if not candidates:
     return None
-  if len(candidates) == 1:
-    return candidates[0]
-
   best_id = None
   best_dist = None
 
@@ -314,6 +312,12 @@ def _choose_closest_device(node_hash: str, ref_lat: float, ref_lon: float,
       continue
 
     dist = _haversine_m(ref_lat, ref_lon, s_lat, s_lon)
+
+    # Explicitly ignore candidates that are too far, even if they are the "closest"
+    # because a hop > ROUTE_MAX_HOP_DISTANCE is physically unlikely/bogus.
+    if dist > (ROUTE_MAX_HOP_DISTANCE * 1000.0):
+      continue
+
     if best_dist is None or dist < best_dist:
       best_dist = dist
       best_id = device_id

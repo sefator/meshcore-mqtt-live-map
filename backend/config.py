@@ -32,6 +32,7 @@ TRAIL_LEN = int(os.getenv("TRAIL_LEN", "30"))
 ROUTE_TTL_SECONDS = int(os.getenv("ROUTE_TTL_SECONDS", "120"))
 ROUTE_PAYLOAD_TYPES = os.getenv("ROUTE_PAYLOAD_TYPES", "8,9,2,5,4")
 ROUTE_PATH_MAX_LEN = int(os.getenv("ROUTE_PATH_MAX_LEN", "16"))
+ROUTE_MAX_HOP_DISTANCE = float(os.getenv("ROUTE_MAX_HOP_DISTANCE", "100"))
 ROUTE_HISTORY_ENABLED = os.getenv("ROUTE_HISTORY_ENABLED",
                                   "true").lower() == "true"
 ROUTE_HISTORY_HOURS = float(os.getenv("ROUTE_HISTORY_HOURS", "24"))
@@ -70,8 +71,8 @@ PAYLOAD_PREVIEW_MAX = int(os.getenv("PAYLOAD_PREVIEW_MAX", "800"))
 DIRECT_COORDS_MODE = os.getenv("DIRECT_COORDS_MODE", "topic").strip().lower()
 DIRECT_COORDS_TOPIC_REGEX = os.getenv("DIRECT_COORDS_TOPIC_REGEX",
                                       r"(position|location|gps|coords)")
-DIRECT_COORDS_ALLOW_ZERO = os.getenv("DIRECT_COORDS_ALLOW_ZERO",
-                                     "false").lower() == "true"
+DIRECT_COORDS_ALLOW_ZERO = (os.getenv("DIRECT_COORDS_ALLOW_ZERO",
+                                      "false").lower() == "true")
 
 ROUTE_HISTORY_ALLOWED_MODES_SET = {
   s.strip() for s in ROUTE_HISTORY_ALLOWED_MODES.split(",") if s.strip()
@@ -80,7 +81,8 @@ ROUTE_HISTORY_ALLOWED_MODES_SET = {
 SITE_TITLE = os.getenv("SITE_TITLE", "Greater Boston Mesh Live Map")
 SITE_DESCRIPTION = os.getenv(
   "SITE_DESCRIPTION",
-  "Live view of Greater Boston Mesh nodes, message routes, and advert paths.")
+  "Live view of Greater Boston Mesh nodes, message routes, and advert paths.",
+)
 SITE_OG_IMAGE = os.getenv("SITE_OG_IMAGE", "")
 SITE_URL = os.getenv("SITE_URL", "/")
 SITE_ICON = os.getenv("SITE_ICON", "/static/logo.png")
