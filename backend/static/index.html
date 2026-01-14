@@ -50,6 +50,12 @@
   data-update-available="{{UPDATE_AVAILABLE}}"
   data-update-local="{{UPDATE_LOCAL}}"
   data-update-remote="{{UPDATE_REMOTE}}"
+  data-prop-freq="{{PROPAGATION_FREQ_MHZ}}"
+  data-prop-bw="{{PROPAGATION_BW_HZ}}"
+  data-prop-sf="{{PROPAGATION_SF}}"
+  data-prop-cr="{{PROPAGATION_CR}}"
+  data-prop-noise-figure="{{PROPAGATION_NOISE_FIGURE_DB}}"
+  data-prop-tx-gain="{{PROPAGATION_TX_GAIN_DB}}"
 >
   <script>
     window.__meshmapStarted = false;
@@ -176,8 +182,8 @@
   </div>
   <div class="prop-panel" id="prop-panel">
     <div class="small"><strong>Propagation estimate</strong></div>
-    <div class="small">LoRa 910.525 MHz • BW 62.5 kHz • SF7 • CR8</div>
-    <div class="small">Assumes 3 dBi TX antenna, 6 dB noise figure, 10 dB fade margin.</div>
+    <div class="small">LoRa {{PROPAGATION_FREQ_MHZ}} MHz • BW {{PROPAGATION_BW_HZ}} Hz • SF{{PROPAGATION_SF}} • CR{{PROPAGATION_CR}}</div>
+    <div class="small">Assumes {{PROPAGATION_TX_GAIN_DB}} dBi TX antenna, {{PROPAGATION_NOISE_FIGURE_DB}} dB noise figure, 10 dB fade margin.</div>
     <div class="small">Defaults assume 5 m AGL; MSL overrides use terrain data.</div>
     <label class="prop-field">
       <span>Tx power (dBm)<span class="prop-hint" title="transmit power used for link budget" data-tooltip="transmit power used for link budget">?</span></span>

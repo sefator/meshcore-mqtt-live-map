@@ -165,5 +165,14 @@ LOS_PEAKS_MAX = int(os.getenv("LOS_PEAKS_MAX", "4"))
 
 COVERAGE_API_URL = os.getenv("COVERAGE_API_URL", "").strip()
 
+PROPAGATION_FREQ_MHZ = float(os.getenv("PROPAGATION_FREQ_MHZ", "910.525"))
+PROPAGATION_BW_HZ = float(os.getenv("PROPAGATION_BW_HZ", "62500"))
+PROPAGATION_SF = int(os.getenv("PROPAGATION_SF", "7"))
+PROPAGATION_CR = int(os.getenv("PROPAGATION_CR", "8"))
+PROPAGATION_NOISE_FIGURE_DB = float(
+  os.getenv("PROPAGATION_NOISE_FIGURE_DB", "6")
+)
+PROPAGATION_TX_GAIN_DB = float(os.getenv("PROPAGATION_TX_GAIN_DB", "3"))
+
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 NODE_SCRIPT_PATH = os.path.join(APP_DIR, "meshcore_decode.mjs")

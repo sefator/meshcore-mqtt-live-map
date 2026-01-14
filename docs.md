@@ -40,6 +40,7 @@ This project renders live MeshCore traffic on a Leaflet + OpenStreetMap map. A F
 - `MQTT_ONLINE_FORCE_NAMES` forces named nodes to show MQTT online and skips them in peers.
 - `GIT_CHECK_ENABLED`, `GIT_CHECK_FETCH`, `GIT_CHECK_PATH` enable update checks.
 - `GIT_CHECK_INTERVAL_SECONDS` controls how often the server re-checks for updates.
+- `PROPAGATION_*` variables configure the radio model defaults: `PROPAGATION_FREQ_MHZ`, `PROPAGATION_BW_HZ`, `PROPAGATION_SF`, `PROPAGATION_CR`, `PROPAGATION_NOISE_FIGURE_DB`, `PROPAGATION_TX_GAIN_DB`.
 - `ROUTE_MAX_HOP_DISTANCE` prunes hops longer than the configured km distance.
 - `ROUTE_INFRA_ONLY` limits route lines to repeaters/rooms (companions excluded from routes).
 - `NEIGHBOR_OVERRIDES_FILE` points at an optional JSON file with neighbor pairs to resolve hash collisions.

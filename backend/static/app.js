@@ -299,15 +299,15 @@
     let propagationGpuInitPromise = null;
 
     const PROP_DEFAULTS = {
-      freqMHz: 910.525,
-      bwHz: 62500,
-      sf: 7,
-      cr: 8,
+      freqMHz: Number(config.propFreq) || 910.525,
+      bwHz: Number(config.propBw) || 62500,
+      sf: Number(config.propSf) || 7,
+      cr: Number(config.propCr) || 8,
       snrMinDb: -7.5,
-      noiseFigureDb: 6,
+      noiseFigureDb: Number(config.propNoiseFigure) || 6,
       fadeMarginDb: 10,
       fresnelFactor: 0.2,
-      txAntennaGainDb: 3,
+      txAntennaGainDb: Number(config.propTxGain) || 3,
       clearanceRatio: 0.6,
       clearanceLossDb: 12,
       earthRadiusM: 6371000 * (4 / 3)
