@@ -1,5 +1,8 @@
 # Versions
 
+## v1.0.9 (01-16-2026)
+- Enforce `ROUTE_MAX_HOP_DISTANCE` for fallback-selected hops to prevent unrealistic jumps (credit: https://github.com/sefator).
+
 ## v1.0.8 (01-14-2026)
 - Enforce `ROUTE_MAX_HOP_DISTANCE` across fallback hops, direct routes, and receiver appends to prevent cross-region path jumps.
 
